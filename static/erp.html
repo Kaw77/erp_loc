@@ -572,6 +572,7 @@ body.locked #content-frame { filter: blur(2px); pointer-events: none; }
       <a href="#" data-page="clientes"    class="nav-link">Clientes</a>
       <a href="#" data-page="financeiro"  class="nav-link">💰 Financeiro OFX</a>
       <a href="#" data-page="admin"       class="nav-link">Admin</a>
+      <a href="#" data-page="fiscal" class="nav-link">📊 Fiscal / LALUR</a>
     </nav>
   </aside>
 
@@ -918,7 +919,63 @@ body.locked #content-frame { filter: blur(2px); pointer-events: none; }
         <p class="muted" style="margin-top:1rem;">A base é simples de alimentar e excluir — use o formulário, ou apague tudo aqui.</p>
       </div>
     </section>
+    <!-- FISCAL / CONSOLIDAÇÃO FISCAL -->
+<section class="page hidden" id="page-fiscal">
+  <h1>📊 Consolidação Fiscal (Lucro Real)</h1>
+  <div class="panel">
+    <h2>Carregar transações</h2>
+    <p class="muted">Envie o CSV gerado pelo módulo financeiro (ou cole os dados manualmente).</p>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
+      <input type="file" id="fiscalCsvInput" accept=".csv" style="flex:1;min-width:200px;">
+      <button class="btn-primary" onclick="fiscalCarregarCSV()">📤 Carregar CSV</button>
+      <button class="btn-secondary" onclick="document.getElementById('fiscalCsvInput').value='';">Limpar</button>
+    </div>
+    <div id="fiscalStatus" class="json-msg"></div>
+  </div>
 
+  <div class="panel">
+    <h2>Parâmetros adicionais</h2>
+    <div class="form-grid">
+      <label>Depreciação do período (R$)
+        <input type="number" id="fiscalDepreciacao" step="0.01" placeholder="0,00">
+      </label>
+      <label>Valor da venda de veículos (R$)
+        <input type="number" id="fiscalVendaValor" step="0.01" placeholder="0,00">
+      </label>
+      <label>Custo contábil dos veículos vendidos (R$)
+        <input type="number" id="fiscalVendaCusto" step="0.01" placeholder="0,00">
+      </label>
+      <label>Multas de trânsito pagas (extra) (R$)
+        <input type="number" id="fiscalMultasExtra" step="0.01" placeholder="0,00">
+      </label>
+    </div>
+    <div class="form-actions">
+      <button class="btn-primary" onclick="fiscalConsolidar()">📊 Consolidar</button>
+      <button class="btn-secondary" onclick="fiscalLimpar()">Limpar tudo</button>
+    </div>
+  </div>
+
+  <!-- Resultados -->
+  <div class="panel" id="fiscalResultado" style="display:none;">
+    <h2>📋 Resultado da Consolidação</h2>
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap:12px; margin-bottom:16px;">
+      <div class="stat stat-tot"><span class="num" id="fResReceitas">0</span><span class="lbl">Receitas Op.</span></div>
+      <div class="stat stat-ok"><span class="num" id="fResGanhoCapital">0</span><span class="lbl">Ganho Capital</span></div>
+      <div class="stat stat-loc"><span class="num" id="fResDespesas">0</span><span class="lbl">Despesas Dedut.</span></div>
+      <div class="stat stat-man"><span class="num" id="fResDepreciacao">0</span><span class="lbl">Depreciação</span></div>
+      <div class="stat stat-res"><span class="num" id="fResMultas">0</span><span class="lbl">Multas (Adição)</span></div>
+      <div class="stat" style="background:#6a1b9a;color:#fff;"><span class="num" id="fResLucroLiquido">0</span><span class="lbl">Lucro Líquido</span></div>
+    </div>
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap:12px; background:#f0f0f0; padding:16px; border-radius:8px;">
+      <div><strong>Base LALUR:</strong> <span id="fResBaseLalur">0</span></div>
+      <div><strong>CSLL (9%):</strong> <span id="fResCsll">0</span></div>
+      <div><strong>IRPJ Normal (15%):</strong> <span id="fResIrpjNormal">0</span></div>
+      <div><strong>IRPJ Adicional (10%):</strong> <span id="fResIrpjAdicional">0</span></div>
+      <div><strong>IRPJ Total:</strong> <span id="fResIrpjTotal">0</span></div>
+      <div><strong>Carga Tributária Total:</strong> <span id="fResCargaTributaria">0</span></div>
+    </div>
+  </div>
+</section>
   </main>
 </div>
 
@@ -2485,6 +2542,113 @@ window.fin_export = fin_export;
 window.fin_exemplo = fin_exemplo;
 window.fin_render = fin_render;
 
+// ===== FISCAL =====
+let fiscalTransacoes = [];
+
+function fiscalCarregarCSV() {
+  const input = document.getElementById('fiscalCsvInput');
+  const file = input.files[0];
+  if (!file) {
+    document.getElementById('fiscalStatus').innerHTML = '<span style="color:#FF6B6B;">Selecione um arquivo CSV.</span>';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text = e.target.result;
+    const lines = text.split('\n').filter(line => line.trim() !== '');
+    if (lines.length < 2) {
+      document.getElementById('fiscalStatus').innerHTML = '<span style="color:#FF6B6B;">Arquivo inválido (sem dados).</span>';
+      return;
+    }
+    // Cabeçalho: Data;Arquivo;Loja;Descrição;Tipo;Valor;Categoria
+    const header = lines[0].split(';').map(h => h.trim());
+    fiscalTransacoes = [];
+    for (let i = 1; i < lines.length; i++) {
+      const cols = lines[i].split(';');
+      if (cols.length < 7) continue;
+      const obj = {};
+      header.forEach((h, idx) => {
+        obj[h] = cols[idx] ? cols[idx].trim() : '';
+      });
+      // Converte valor
+      let valStr = obj.Valor || '0';
+      valStr = valStr.replace('.', '').replace(',', '.');
+      const valor = parseFloat(valStr) || 0;
+      fiscalTransacoes.push({
+        descricao: obj.Descrição || '',
+        categoria: obj.Categoria || '',
+        tipo: obj.Tipo || '',
+        valor: valor
+      });
+    }
+    document.getElementById('fiscalStatus').innerHTML = `<span style="color:#2BB673;">${fiscalTransacoes.length} transações carregadas.</span>`;
+    document.getElementById('fiscalResultado').style.display = 'none';
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+async function fiscalConsolidar() {
+  const depreciacao = parseFloat(document.getElementById('fiscalDepreciacao').value.replace(',', '.')) || 0;
+  const vendaValor = parseFloat(document.getElementById('fiscalVendaValor').value.replace(',', '.')) || 0;
+  const vendaCusto = parseFloat(document.getElementById('fiscalVendaCusto').value.replace(',', '.')) || 0;
+  const multasExtra = parseFloat(document.getElementById('fiscalMultasExtra').value.replace(',', '.')) || 0;
+
+  if (fiscalTransacoes.length === 0) {
+    document.getElementById('fiscalStatus').innerHTML = '<span style="color:#FF6B6B;">Carregue um CSV primeiro.</span>';
+    return;
+  }
+
+  const payload = {
+    transacoes: fiscalTransacoes,
+    depreciacao: depreciacao,
+    venda_valor: vendaValor,
+    venda_custo: vendaCusto,
+    multas_extra: multasExtra
+  };
+
+  try {
+    const resp = await fetch(API_BASE + '/consolidar_fiscal', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload)
+    });
+    if (!resp.ok) {
+      const err = await resp.text();
+      throw new Error(err || 'Falha na consolidação');
+    }
+    const data = await resp.json();
+    // Preenche os campos
+    document.getElementById('fResReceitas').textContent = data.receitas_operacionais.toLocaleString('pt-BR', {minimumFractionDigits:2});
+    document.getElementById('fResGanhoCapital').textContent = data.ganho_capital.toLocaleString('pt-BR', {minimumFractionDigits:2});
+    document.getElementById('fResDespesas').textContent = data.despesas_dedutiveis.toLocaleString('pt-BR', {minimumFractionDigits:2});
+    document.getElementById('fResDepreciacao').textContent = data.depreciacao_periodo.toLocaleString('pt-BR', {minimumFractionDigits:2});
+    document.getElementById('fResMultas').textContent = data.multas_transito_pagas.toLocaleString('pt-BR', {minimumFractionDigits:2});
+    document.getElementById('fResLucroLiquido').textContent = data.lucro_liquido_contabil.toLocaleString('pt-BR', {minimumFractionDigits:2});
+    document.getElementById('fResBaseLalur').textContent = data.base_lalur.toLocaleString('pt-BR', {minimumFractionDigits:2});
+    document.getElementById('fResCsll').textContent = data.csll.toLocaleString('pt-BR', {minimumFractionDigits:2});
+    document.getElementById('fResIrpjNormal').textContent = data.irpj_normal.toLocaleString('pt-BR', {minimumFractionDigits:2});
+    document.getElementById('fResIrpjAdicional').textContent = data.irpj_adicional.toLocaleString('pt-BR', {minimumFractionDigits:2});
+    document.getElementById('fResIrpjTotal').textContent = data.irpj_total.toLocaleString('pt-BR', {minimumFractionDigits:2});
+    document.getElementById('fResCargaTributaria').textContent = data.carga_tributaria.toLocaleString('pt-BR', {minimumFractionDigits:2});
+    document.getElementById('fiscalResultado').style.display = 'block';
+    document.getElementById('fiscalStatus').innerHTML = '<span style="color:#2BB673;">Consolidação concluída.</span>';
+  } catch (e) {
+    document.getElementById('fiscalStatus').innerHTML = `<span style="color:#FF6B6B;">Erro: ${e.message}</span>`;
+  }
+}
+
+function fiscalLimpar() {
+  fiscalTransacoes = [];
+  document.getElementById('fiscalCsvInput').value = '';
+  document.getElementById('fiscalStatus').innerHTML = '';
+  document.getElementById('fiscalResultado').style.display = 'none';
+  document.querySelectorAll('#fiscalResultado .num').forEach(el => el.textContent = '0');
+  document.getElementById('fiscalDepreciacao').value = '';
+  document.getElementById('fiscalVendaValor').value = '';
+  document.getElementById('fiscalVendaCusto').value = '';
+  document.getElementById('fiscalMultasExtra').value = '';
+}
 </script>
 </body>
 </html>
