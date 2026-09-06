@@ -1,0 +1,2490 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ERP Locadoras — Gestão de Placas</title>
+<style>
+/* ===== TEMA: Amarelo, Preto, Branco ===== */
+:root {
+  --amarelo: #FFD60A;
+  --amarelo-escuro: #F4B400;
+  --preto: #0B0B0B;
+  --preto-suave: #1A1A1A;
+  --cinza: #ECECEC;
+  --cinza-claro: #F7F7F7;
+  --branco: #FFFFFF;
+  --ok: #2BB673;
+  --loc: #E63946;
+  --man: #F4A300;
+  --sombra: 0 2px 6px rgba(0,0,0,.08);
+  --sombra-forte: 0 4px 14px rgba(0,0,0,.18);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; color: var(--preto); background: var(--cinza-claro); }
+
+/* ===== TOPO / LOGIN SUPERIOR ===== */
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--preto); color: var(--amarelo);
+  padding: 10px 18px; box-shadow: var(--sombra-forte);
+  flex-wrap: wrap; gap: 10px;
+}
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand .logo {
+  background: var(--amarelo); color: var(--preto);
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 900;
+}
+.brand-text { font-weight: 900; font-size: 20px; letter-spacing: 1px; color: var(--branco); }
+.brand-text span { color: var(--amarelo); }
+
+.login-form { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.login-label { color: var(--amarelo); font-size: 12px; font-weight: 700; }
+.login-form input {
+  background: var(--preto-suave); color: var(--branco);
+  border: 1px solid #333; padding: 6px 8px; border-radius: 4px; font-size: 14px;
+}
+.login-form input::placeholder { color: #888; }
+.btn-login {
+  background: var(--amarelo); color: var(--preto); border: none;
+  padding: 6px 14px; font-weight: 800; border-radius: 4px; cursor: pointer;
+  text-transform: uppercase; letter-spacing: 1px;
+}
+.btn-login:hover { background: var(--amarelo-escuro); }
+.login-msg { color: var(--amarelo); font-size: 12px; }
+
+/* ===== LAYOUT ===== */
+.layout { display: grid; grid-template-columns: 280px 1fr; min-height: calc(100vh - 130px); }
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+  background: var(--branco); border-right: 1px solid var(--cinza);
+  padding: 18px; position: sticky; top: 60px; align-self: start;
+  height: calc(100vh - 60px); overflow-y: auto;
+}
+.manual h2 { color: var(--preto); border-bottom: 3px solid var(--amarelo); padding-bottom: 6px; }
+.manual-text { font-size: 12px; line-height: 1.5; color: #333; }
+.manual-text code { background: var(--cinza); padding: 1px 4px; border-radius: 3px; font-size: 12px; }
+
+.nav-links { margin-top: 20px; }
+.nav-links h2 { color: var(--preto); border-bottom: 3px solid var(--amarelo); padding-bottom: 6px; }
+.nav-link {
+  display: block; padding: 10px 12px; margin: 4px 0;
+  background: var(--cinza-claro); color: var(--preto);
+  text-decoration: none; border-radius: 4px;
+  border-left: 4px solid transparent; font-weight: 600;
+}
+.nav-link:hover { background: var(--amarelo); }
+.nav-link.active { background: var(--preto); color: var(--amarelo); border-left-color: var(--amarelo); }
+
+/* ===== CONTEÚDO ===== */
+.content { padding: 24px; }
+.content h1 { color: var(--preto); border-bottom: 4px solid var(--amarelo); padding-bottom: 8px; margin-top: 0; }
+.page { animation: fade .25s ease; }
+.hidden { display: none; }
+.muted { color: #666; font-size: 13px; }
+@keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+/* ===== PAINÉIS ===== */
+.panel {
+  background: var(--branco); border-radius: 6px; padding: 18px;
+  margin-bottom: 18px; box-shadow: var(--sombra);
+  border-top: 4px solid var(--amarelo);
+}
+.panel h2 { margin-top: 0; color: var(--preto); }
+
+/* ===== BASES (4: RS, PR, SP, MG) ===== */
+.bases-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 18px; }
+.base-card { background: var(--branco); border-radius: 6px; padding: 16px;
+  box-shadow: var(--sombra); border-top: 5px solid var(--amarelo); }
+.base-card h3 { margin: 0 0 10px; color: var(--preto); display:flex; align-items:center; gap:8px; }
+.base-uf  { background: var(--preto); color: var(--amarelo);
+  font-size: 12px; font-weight: 800; padding: 3px 8px; border-radius: 3px;
+  letter-spacing: 1px; }
+.base-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+.stat { display: flex; flex-direction: column; align-items: center; padding: 7px 2px;
+  border-radius: 4px; color: var(--branco); font-weight: 700; }
+.stat .num { font-size: 20px; }
+.stat .lbl { font-size: 9px;  text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-tot { background: var(--preto); }
+.stat-ok  { background: var(--ok); }
+.stat-loc { background: var(--loc); }
+.stat-man { background: var(--man); color: var(--preto); }
+.stat-res { background: #6a1b9a; }
+
+/* ===== FORM CENTRALIZADO ===== */
+.form-wrap { display: flex; justify-content: center; }
+.cadastro-form {
+  background: var(--branco); border-radius: 6px; padding: 22px;
+  box-shadow: var(--sombra-forte);
+  border-top: 5px solid var(--amarelo);
+  width: 100%; max-width: 720px;
+}
+.cadastro-form h2 { margin-top: 0; color: var(--preto); }
+.form-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+  margin: 12px 0;
+}
+.form-grid label { display: flex; flex-direction: column; font-size: 13px; font-weight: 600; color: var(--preto); }
+.form-grid input, .form-grid select {
+  padding: 9px 10px; border: 1px solid #ccc; border-radius: 4px;
+  font-size: 14px; margin-top: 4px; background: var(--branco);
+}
+.form-grid input:focus, .form-grid select:focus, textarea:focus, input:focus, select:focus {
+  outline: 2px solid var(--amarelo); border-color: var(--amarelo);
+}
+.form-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+
+.btn-primary {
+  background: var(--preto); color: var(--amarelo); border: none;
+  padding: 9px 16px; font-weight: 800; border-radius: 4px; cursor: pointer;
+  text-transform: uppercase; letter-spacing: 1px;
+}
+.btn-primary:hover { background: var(--amarelo); color: var(--preto); }
+.btn-secondary {
+  background: var(--cinza); color: var(--preto); border: 1px solid #bbb;
+  padding: 9px 16px; font-weight: 700; border-radius: 4px; cursor: pointer;
+}
+.btn-secondary:hover { background: var(--amarelo); }
+.btn-danger {
+  background: var(--loc); color: var(--branco); border: none;
+  padding: 9px 16px; font-weight: 800; border-radius: 4px; cursor: pointer;
+}
+.btn-danger:hover { background: #b71c1c; }
+
+/* ===== FILTROS + TABELA ===== */
+.filters {
+  display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px;
+  margin-bottom: 10px;
+}
+.filters input, .filters select {
+  padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px;
+}
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+table th, table td { padding: 9px 8px; text-align: left; border-bottom: 1px solid var(--cinza); }
+table th {
+  background: var(--preto); color: var(--amarelo);
+  text-transform: uppercase; font-size: 12px; letter-spacing: 1px;
+}
+table tbody tr:hover { background: #FFF8D6; }
+
+.badge { display: inline-block; padding: 3px 9px; border-radius: 12px; font-size: 11px;
+  font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+.badge-DISPONÍVEL  { background: var(--ok);  color: var(--branco); }
+.badge-LOCADO      { background: var(--loc); color: var(--branco); }
+.badge-MANUTENÇÃO  { background: var(--man); color: var(--preto); }
+.badge-RESERVADO   { background: #6a1b9a;    color: var(--branco); }
+.badge-USO\ INTERNO { background: #455a64;   color: var(--branco); }
+.badge-Disponível  { background: var(--ok);  color: var(--branco); }
+.badge-Locado      { background: var(--loc); color: var(--branco); }
+.badge-Manutenção  { background: var(--man); color: var(--preto); }
+
+.row-del { background: var(--loc); color: var(--branco); border: none;
+           padding: 5px 10px; border-radius: 3px; cursor: pointer; font-weight: 700; font-size: 12px; }
+.row-del:hover { background: #b71c1c; }
+.row-edit { background: var(--amarelo); color: var(--preto); border: none;
+            padding: 5px 10px; border-radius: 3px; cursor: pointer; font-weight: 700; font-size: 12px; }
+.row-edit:hover { background: var(--amarelo-escuro); }
+.row-status { background: var(--preto); color: var(--amarelo); border: none;
+              padding: 5px 10px; border-radius: 3px; cursor: pointer; font-weight: 700; font-size: 12px; }
+.row-pdf { background: var(--branco); color: var(--preto); border: 1px solid #ccc;
+           padding: 5px 10px; border-radius: 3px; cursor: pointer; font-weight: 700; font-size: 12px; }
+.row-pdf:hover { background: var(--amarelo); }
+
+/* ===== STATUS RÁPIDO ===== */
+.status-toolbar {
+  display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 8px; margin-bottom: 14px;
+}
+.status-toolbar input, .status-toolbar select {
+  padding: 9px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;
+}
+.status-summary {
+  display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px;
+}
+.status-summary .chip {
+  background: var(--preto); color: var(--amarelo);
+  padding: 6px 14px; border-radius: 20px; font-weight: 800; font-size: 13px;
+}
+.status-summary .chip.ok  { background: var(--ok);  color: var(--branco); }
+.status-summary .chip.loc { background: var(--loc); color: var(--branco); }
+.status-summary .chip.man { background: var(--man); color: var(--preto); }
+.status-summary .chip.res { background: #6a1b9a; color: var(--branco); }
+.status-summary .chip.uso { background: #455a64; color: var(--branco); }
+
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+.status-card {
+  background: var(--branco);
+  border-radius: 6px;
+  padding: 16px 18px;
+  box-shadow: var(--sombra);
+  border-left: 10px solid var(--amarelo);
+  cursor: pointer;
+  transition: transform .15s ease, box-shadow .15s ease;
+  position: relative;
+}
+.status-card:hover { transform: translateY(-3px); box-shadow: var(--sombra-forte); }
+.status-card .placa {
+  font-size: 26px; font-weight: 900; letter-spacing: 3px; color: var(--preto);
+  font-family: "Courier New", Consolas, monospace;
+}
+.status-card .modelo {
+  font-size: 13px; color: #444; margin-top: 4px; font-weight: 600;
+}
+.status-card .base-tag {
+  display: inline-block; margin-top: 8px; font-size: 11px;
+  background: var(--cinza); color: var(--preto);
+  padding: 2px 8px; border-radius: 10px; font-weight: 700;
+}
+.status-card .badge { margin-top: 10px; padding: 6px 12px; font-size: 12px; }
+.status-card .pdf-mini {
+  position: absolute; top: 10px; right: 10px;
+  background: var(--amarelo); color: var(--preto);
+  font-size: 11px; font-weight: 800;
+  padding: 3px 8px; border-radius: 12px;
+}
+.status-card.s-Disponível { border-left-color: var(--ok); }
+.status-card.s-Locado     { border-left-color: var(--loc); }
+.status-card.s-Manutenção { border-left-color: var(--man); }
+
+/* ===== DOCUMENTOS (PDF) ===== */
+.dropzone {
+  border: 3px dashed var(--amarelo);
+  background: #FFFEF3;
+  padding: 30px;
+  border-radius: 6px;
+  text-align: center;
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--preto);
+  transition: background .2s, border-color .2s;
+}
+.dropzone:hover, .dropzone.drag { background: var(--amarelo); }
+.dropzone input[type=file] { display: none; }
+
+.docs-by-plate {
+  display: grid; gap: 14px;
+}
+.doc-plate-block {
+  background: var(--cinza-claro);
+  border-left: 5px solid var(--amarelo);
+  padding: 14px 16px;
+  border-radius: 4px;
+}
+.doc-plate-block h3 { margin: 0 0 8px; color: var(--preto); font-size: 16px; }
+.doc-plate-block h3 .placa-tag {
+  font-family: monospace; background: var(--preto); color: var(--amarelo);
+  padding: 2px 8px; border-radius: 3px; letter-spacing: 1px; margin-left: 6px;
+}
+.doc-list { list-style: none; padding: 0; margin: 0; }
+.doc-list li {
+  background: var(--branco);
+  border: 1px solid var(--cinza);
+  padding: 10px 12px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  flex-wrap: wrap;
+}
+.doc-list li .doc-info { display: flex; flex-direction: column; gap: 2px; }
+.doc-list li .doc-info b { color: var(--preto); }
+.doc-list li .doc-info small { color: #666; font-size: 11px; }
+.doc-list li .doc-actions { display: flex; gap: 6px; }
+.doc-list li button {
+  border: none; padding: 5px 10px; border-radius: 3px;
+  cursor: pointer; font-weight: 700; font-size: 12px;
+}
+.btn-view { background: var(--amarelo); color: var(--preto); }
+.btn-view:hover { background: var(--amarelo-escuro); }
+.btn-dl   { background: var(--preto); color: var(--amarelo); }
+.btn-dl:hover { background: var(--amarelo); color: var(--preto); }
+.btn-x    { background: var(--loc); color: var(--branco); }
+.btn-x:hover { background: #b71c1c; }
+
+/* ===== MODAL PDF ===== */
+.pdf-modal {
+  position: fixed !important; inset: 0 !important;
+  background: rgba(11,11,11,.96); z-index: 9999;
+  display: flex; flex-direction: column;
+  width: 100vw; height: 100vh;
+}
+.pdf-modal.hidden { display: none !important; }
+.pdf-modal-bar {
+  background: var(--preto); color: var(--amarelo);
+  padding: 12px 18px; display: flex; justify-content: space-between; align-items: center;
+  gap: 10px; flex-wrap: wrap;
+  flex: 0 0 auto;
+  min-height: 56px;
+}
+.pdf-modal-bar h3 { margin: 0; font-size: 15px; color: var(--amarelo); }
+.pdf-modal-bar .meta { color: #ccc; font-size: 12px; }
+.pdf-modal-bar button {
+  background: var(--amarelo); color: var(--preto); border: none;
+  padding: 8px 16px; border-radius: 4px; font-weight: 800; cursor: pointer;
+  margin-left: 6px;
+}
+.pdf-modal-bar button:hover { background: var(--amarelo-escuro); }
+.pdf-frame-host {
+  flex: 1 1 auto;
+  background: #2a2a2a;
+  width: 100%;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
+.pdf-frame-host iframe,
+.pdf-frame-host embed,
+.pdf-frame-host object {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: white;
+}
+.pdf-empty-state {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center; flex-direction: column;
+  color: #bbb; gap: 14px; font-size: 14px; text-align: center; padding: 30px;
+}
+
+/* ===== RELATÓRIO ===== */
+.relatorio-toolbar {
+  display: grid;
+  grid-template-columns: 1fr 1fr 2fr 1fr auto;
+  gap: 10px; align-items: end;
+  margin-bottom: 14px;
+}
+.relatorio-toolbar label {
+  font-size: 12px; font-weight: 700; color: var(--preto);
+  display: flex; flex-direction: column; gap: 4px;
+}
+.relatorio-toolbar input,
+.relatorio-toolbar select {
+  padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px;
+  font-size: 14px; background: var(--branco);
+}
+.relatorio-actions {
+  display: flex; gap: 10px; flex-wrap: wrap;
+}
+.relatorio-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px; margin-bottom: 16px;
+}
+.relatorio-summary .sum-card {
+  border-radius: 6px; padding: 12px 14px;
+  background: var(--preto); color: var(--amarelo);
+  border-top: 4px solid var(--amarelo);
+}
+.relatorio-summary .sum-card.ok  { background: var(--ok); color: var(--branco); }
+.relatorio-summary .sum-card.loc { background: var(--loc); color: var(--branco); }
+.relatorio-summary .sum-card.man { background: var(--man); color: var(--preto); }
+.relatorio-summary .sum-card .num { font-size: 26px; font-weight: 900; display: block; line-height: 1; }
+.relatorio-summary .sum-card .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: .9; }
+.relatorio-table { border: 1px solid #ddd; }
+.relatorio-table th, .relatorio-table td {
+  font-size: 13px; padding: 8px 10px;
+}
+.relatorio-footer-meta {
+  margin-top: 14px; padding-top: 10px;
+  border-top: 1px dashed #999;
+  display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  font-size: 12px; color: #444;
+}
+.print-only { display: none; }
+
+@media print {
+  body { background: #fff !important; }
+  #lockedScreen, .topbar, .sidebar, .footer, .logout-btn,
+  .nav-links, .manual, .qcard, .json-msg, .modal, .pdf-modal { display: none !important; }
+  .layout { display: block !important; min-height: 0 !important; }
+  .content { padding: 0 !important; }
+  .panel { box-shadow: none !important; border-top: 4px solid var(--amarelo); page-break-inside: avoid; }
+  .relatorio-actions, .relatorio-toolbar, .no-print { display: none !important; }
+  .print-only { display: block !important; }
+  .print-only h1 {
+    color: var(--preto);
+    border-bottom: 4px solid var(--amarelo);
+    padding-bottom: 8px;
+    margin: 0 0 8px;
+    font-size: 22px;
+  }
+  .print-only .meta-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 20px;
+    font-size: 13px; margin-bottom: 14px; padding: 8px 12px;
+    background: #FFFBE6; border: 1px solid #e6c200; border-radius: 4px;
+  }
+  .relatorio-table th { background: var(--preto) !important; color: var(--amarelo) !important; }
+  .relatorio-table tr { page-break-inside: avoid; }
+  .badge { border: 1px solid #888 !important; }
+  a, button { color: inherit !important; }
+}
+
+/* ===== FINANCEIRO (adicional) ===== */
+#page-financeiro {
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 16px;
+  border-radius: 12px;
+  font-family: Segoe UI, Arial, sans-serif;
+}
+#page-financeiro h2 { margin: 0 0 4px; color: #facc15; }
+#page-financeiro .muted { color: #94a3b8; font-size: 13px; }
+#page-financeiro table th { background: #1e293b; color: #f1f5f9; border: 1px solid #334155; }
+#page-financeiro table td { border: 1px solid #334155; }
+
+/* ===== OUTROS ===== */
+.quick-search { display: flex; gap: 8px; }
+.quick-search input { flex: 1; padding: 11px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+.quick-result { margin-top: 12px; }
+.qcard {
+  background: var(--cinza-claro); padding: 12px; border-radius: 4px;
+  margin-bottom: 8px; border-left: 5px solid var(--amarelo);
+}
+.qcard b { color: var(--preto); }
+.json-msg { margin-top: 10px; font-weight: 700; }
+.json-msg.ok { color: var(--ok); }
+.json-msg.err { color: var(--loc); }
+
+#lockedScreen { display: none; }
+body.locked #content-frame { filter: blur(2px); pointer-events: none; }
+.locked-banner {
+  background: var(--loc); color: var(--branco); padding: 12px; text-align: center;
+  font-weight: 700;
+}
+
+.footer {
+  background: var(--preto); color: var(--branco); padding: 20px;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px;
+}
+.footer-block h4 { color: var(--amarelo); margin: 0 0 8px; }
+.footer-block p { margin: 3px 0; font-size: 14px; }
+
+.logout-btn {
+  position: fixed; bottom: 16px; right: 16px;
+  background: var(--preto); color: var(--amarelo);
+  border: 2px solid var(--amarelo); padding: 10px 16px;
+  border-radius: 30px; cursor: pointer; font-weight: 800;
+  box-shadow: var(--sombra-forte);
+}
+.logout-btn.hidden { display: none; }
+
+.locked-screen {
+  position: fixed; inset: 0; background: rgba(11,11,11,.85); z-index: 90;
+  display: flex; align-items: center; justify-content: center;
+}
+.locked-screen.hidden { display: none; }
+.locked-card {
+  background: var(--branco); padding: 30px 40px; border-radius: 8px;
+  text-align: center; box-shadow: var(--sombra-forte);
+  border-top: 5px solid var(--amarelo);
+}
+.locked-card h1 { color: var(--preto); margin-top: 0; }
+.locked-card .hint { color: #666; font-size: 13px; }
+.locked-card code { background: var(--cinza); padding: 2px 6px; border-radius: 3px; }
+
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: relative; top: 0; height: auto; max-height: 50vh; }
+  .bases-grid { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
+  .filters { grid-template-columns: 1fr; }
+  .footer { grid-template-columns: 1fr; text-align: center; }
+  .topbar { position: relative; }
+  .manual-text { font-size: 12px; }
+  .status-toolbar { grid-template-columns: 1fr 1fr; }
+  .relatorio-toolbar { grid-template-columns: 1fr 1fr !important; }
+  .relatorio-actions { flex-direction: column; align-items: stretch !important; }
+}
+@media (max-width: 600px) {
+  .topbar { padding: 8px; }
+  .login-form input { width: 100px; }
+  .base-stats { grid-template-columns: repeat(2, 1fr); }
+  .content { padding: 14px; }
+  .status-toolbar { grid-template-columns: 1fr; }
+  .relatorio-toolbar { grid-template-columns: 1fr !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== TOPO ===== -->
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">●</span>
+    <span class="brand-text">ERP<span>LOC</span></span>
+  </div>
+  <form id="loginForm" class="login-form" onsubmit="return doLogin(event)" action="javascript:void(0)" method="post">
+    <label class="login-label">Usuário</label>
+    <input type="text" id="loginUser" placeholder="admin" autocomplete="username" required>
+    <label class="login-label">Senha</label>
+    <input type="password" id="loginPass" placeholder="••••••" autocomplete="current-password" required>
+    <button type="submit" class="btn-login">Entrar</button>
+    <span id="loginMsg" class="login-msg"></span>
+  </form>
+</header>
+
+<div class="layout">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar">
+    <section class="manual">
+      <h2>📖 Manual</h2>
+      <p class="manual-text">
+        Bem-vindo ao <strong>ERP Locadoras</strong>! Use o menu abaixo para navegar.
+        <br><br>
+        <strong>• Dashboard:</strong> visão geral das <em>4 bases</em> — RS, PR, SP, MG.
+        <br><br>
+        <strong>• Status Rápido:</strong> tela limpa só com <em>placa</em> e <em>disponibilidade</em>.
+        <br><br>
+        <strong>• Placas:</strong> cadastre RENAVAM, modelo, placa, base e status.
+        <br><br>
+        <strong>• Documentos:</strong> PDFs armazenados no servidor (ou localmente como fallback).
+        <br><br>
+        <strong>• Relatórios:</strong> filtros por período, base, placa/RENAVAM.
+        <br><br>
+        <strong>• Usuários:</strong> cadastre, edite e exclua usuários.
+        <br><br>
+        <strong>• Clientes:</strong> cadastre e vincule à placa locada.
+        <br><br>
+        <strong>• Admin:</strong> exportar / importar backup.
+        <br><br>
+        <span style="color:#2BB673;">✔ API conectada</span> · <span style="color:#F4A300;">Fallback localStorage</span>
+      </p>
+    </section>
+
+    <nav class="nav-links">
+      <h2>🔗 Menu</h2>
+      <a href="#" data-page="dashboard"   class="nav-link active">Dashboard</a>
+      <a href="#" data-page="status"      class="nav-link">Status Rápido</a>
+      <a href="#" data-page="placas"      class="nav-link">Placas</a>
+      <a href="#" data-page="documentos"  class="nav-link">Documentos (PDF)</a>
+      <a href="#" data-page="relatorios"  class="nav-link">Relatórios</a>
+      <a href="#" data-page="usuarios"    class="nav-link">👥 Usuários</a>
+      <a href="#" data-page="clientes"    class="nav-link">Clientes</a>
+      <a href="#" data-page="financeiro"  class="nav-link">💰 Financeiro OFX</a>
+      <a href="#" data-page="admin"       class="nav-link">Admin</a>
+    </nav>
+  </aside>
+
+  <!-- ===== CONTEÚDO ===== -->
+  <main class="content">
+
+    <!-- LOCKED SCREEN -->
+    <div id="lockedScreen" class="locked-screen">
+      <div class="locked-card">
+        <h1>Acesso restrito</h1>
+        <p>Faça login na barra superior para continuar.</p>
+        <p class="hint">Padrão: usuário <code>admin</code> · senha <code>admin123</code></p>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <section class="page" id="page-dashboard">
+      <h1>Dashboard — 4 Bases (RS · PR · SP · MG)</h1>
+      <div class="bases-grid">
+        <div class="base-card" data-base="RS"><h3><span class="base-uf">RS</span> Base RS · Porto Alegre</h3>
+          <div class="base-stats">
+            <div class="stat stat-tot"><span class="num" id="b1-total">0</span><span class="lbl">Total</span></div>
+            <div class="stat stat-ok"><span class="num" id="b1-disp">0</span><span class="lbl">DISP</span></div>
+            <div class="stat stat-loc"><span class="num" id="b1-loc">0</span><span class="lbl">LOC</span></div>
+            <div class="stat stat-man"><span class="num" id="b1-man">0</span><span class="lbl">MAN</span></div>
+            <div class="stat stat-res"><span class="num" id="b1-res">0</span><span class="lbl">RES</span></div>
+          </div></div>
+        <div class="base-card" data-base="PR"><h3><span class="base-uf">PR</span> Base PR · Curitiba</h3>
+          <div class="base-stats">
+            <div class="stat stat-tot"><span class="num" id="b2-total">0</span><span class="lbl">Total</span></div>
+            <div class="stat stat-ok"><span class="num" id="b2-disp">0</span><span class="lbl">DISP</span></div>
+            <div class="stat stat-loc"><span class="num" id="b2-loc">0</span><span class="lbl">LOC</span></div>
+            <div class="stat stat-man"><span class="num" id="b2-man">0</span><span class="lbl">MAN</span></div>
+            <div class="stat stat-res"><span class="num" id="b2-res">0</span><span class="lbl">RES</span></div>
+          </div></div>
+        <div class="base-card" data-base="SP"><h3><span class="base-uf">SP</span> Base SP · São Paulo</h3>
+          <div class="base-stats">
+            <div class="stat stat-tot"><span class="num" id="b3-total">0</span><span class="lbl">Total</span></div>
+            <div class="stat stat-ok"><span class="num" id="b3-disp">0</span><span class="lbl">DISP</span></div>
+            <div class="stat stat-loc"><span class="num" id="b3-loc">0</span><span class="lbl">LOC</span></div>
+            <div class="stat stat-man"><span class="num" id="b3-man">0</span><span class="lbl">MAN</span></div>
+            <div class="stat stat-res"><span class="num" id="b3-res">0</span><span class="lbl">RES</span></div>
+          </div></div>
+        <div class="base-card" data-base="MG"><h3><span class="base-uf">MG</span> Base MG · Belo Horizonte</h3>
+          <div class="base-stats">
+            <div class="stat stat-tot"><span class="num" id="b4-total">0</span><span class="lbl">Total</span></div>
+            <div class="stat stat-ok"><span class="num" id="b4-disp">0</span><span class="lbl">DISP</span></div>
+            <div class="stat stat-loc"><span class="num" id="b4-loc">0</span><span class="lbl">LOC</span></div>
+            <div class="stat stat-man"><span class="num" id="b4-man">0</span><span class="lbl">MAN</span></div>
+            <div class="stat stat-res"><span class="num" id="b4-res">0</span><span class="lbl">RES</span></div>
+          </div></div>
+      </div>
+
+      <div class="panel">
+        <h2>🔎 Consulta rápida</h2>
+        <div class="quick-search">
+          <input type="text" id="quickSearch" placeholder="Digite RENAVAM, modelo ou placa…" />
+          <button class="btn-primary" onclick="quickSearch()">Buscar</button>
+        </div>
+        <div id="quickResult" class="quick-result"></div>
+      </div>
+    </section>
+
+    <!-- STATUS RÁPIDO -->
+    <section class="page hidden" id="page-status">
+      <h1>Status Rápido — Placa &amp; Disponibilidade</h1>
+      <div class="status-summary" id="statusSummary"></div>
+      <div class="status-toolbar">
+        <input type="text" id="statusFiltroTexto" placeholder="Buscar placa ou modelo…" oninput="renderStatus()">
+        <select id="statusFiltroBase" onchange="renderStatus()">
+          <option value="">Todas as bases</option>
+          <option value="RS">RS</option><option value="PR">PR</option><option value="SP">SP</option><option value="MG">MG</option>
+        </select>
+        <button class="btn-secondary" onclick="filtrarStatusRapido('DISPONÍVEL')">✓ DISP</button>
+        <button class="btn-secondary" onclick="filtrarStatusRapido('LOCADO')">✗ LOC</button>
+        <button class="btn-secondary" onclick="filtrarStatusRapido('MANUTENÇÃO')">⚙ MAN</button>
+        <button class="btn-secondary" onclick="filtrarStatusRapido('RESERVADO')">📌 RES</button>
+        <button class="btn-secondary" onclick="filtrarStatusRapido('USO INTERNO')">🛠 USO</button>
+      </div>
+      <div class="status-grid" id="statusGrid"></div>
+    </section>
+
+    <!-- PLACAS -->
+    <section class="page hidden" id="page-placas">
+      <h1>Cadastro de Placas</h1>
+      <div class="form-wrap">
+        <form id="placaForm" class="cadastro-form" onsubmit="return salvarPlaca(event)">
+          <h2>Novo / Editar</h2>
+          <div class="form-grid">
+            <label>RENAVAM<input type="text" id="renavam" required maxlength="11" placeholder="01234567890"></label>
+            <label>Modelo<input type="text" id="modelo" required placeholder="HB20 1.6"></label>
+            <label>Placa<input type="text" id="placa" required placeholder="ABC1D23" maxlength="7"></label>
+            <label>Base
+              <select id="base" required>
+                <option value="RS">RS — Rio Grande do Sul</option>
+                <option value="PR">PR — Paraná</option>
+                <option value="SP">SP — São Paulo</option>
+                <option value="MG">MG — Minas Gerais</option>
+              </select>
+            </label>
+            <label>Status
+              <select id="status" required>
+                <option value="DISPONÍVEL">DISPONÍVEL</option>
+                <option value="LOCADO">LOCADO</option>
+                <option value="MANUTENÇÃO">MANUTENÇÃO</option>
+                <option value="RESERVADO">RESERVADO</option>
+                <option value="USO INTERNO">USO INTERNO</option>
+              </select>
+            </label>
+            <label>Cliente (opcional)<input type="text" id="cliente" placeholder="Nome do locatário"></label>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">💾 Salvar</button>
+            <button type="button" class="btn-secondary" onclick="limparForm()">Limpar</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="panel">
+        <h2>📋 Veículos cadastrados</h2>
+        <div class="filters">
+          <input type="text" id="filtroTexto" placeholder="Filtrar por RENAVAM, modelo, placa…" oninput="renderPlacas()">
+          <select id="filtroBase" onchange="renderPlacas()">
+            <option value="">Todas as bases</option>
+            <option value="RS">RS</option><option value="PR">PR</option>
+            <option value="SP">SP</option><option value="MG">MG</option>
+          </select>
+          <select id="filtroStatus" onchange="renderPlacas()">
+            <option value="">Todos os status</option>
+            <option value="DISPONÍVEL">DISPONÍVEL</option>
+            <option value="LOCADO">LOCADO</option>
+            <option value="MANUTENÇÃO">MANUTENÇÃO</option>
+            <option value="RESERVADO">RESERVADO</option>
+            <option value="USO INTERNO">USO INTERNO</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table id="tblPlacas">
+            <thead><tr><th>RENAVAM</th><th>Modelo</th><th>Placa</th><th>Base</th><th>Status</th><th>Cliente</th><th>PDFs</th><th>Ações</th></tr></thead>
+            <tbody id="tbodyPlacas"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- DOCUMENTOS -->
+    <section class="page hidden" id="page-documentos">
+      <h1>Documentos das Placas (PDF)</h1>
+      <div class="form-wrap">
+        <div class="cadastro-form">
+          <h2>📎 Anexar PDF a uma placa</h2>
+          <p class="muted">Os PDFs são enviados ao servidor (ou salvos localmente como fallback).</p>
+          <div class="form-grid">
+            <label>Placa destino
+              <select id="docPlaca"></select>
+            </label>
+            <label>Arquivo PDF (máx 10 MB)
+              <input type="file" id="docFile" accept="application/pdf,.pdf">
+            </label>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn-primary" onclick="uploadPDF()">📤 Enviar PDF</button>
+            <button type="button" class="btn-secondary" onclick="document.getElementById('docFile').click()">Selecionar arquivo…</button>
+            <button type="button" class="btn-secondary" onclick="document.getElementById('docFile').value=''; document.getElementById('docMsg').textContent='';">Limpar</button>
+          </div>
+          <div id="docMsg" class="json-msg"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>📚 Documentos arquivados por placa</h2>
+        <div class="docs-by-plate" id="docsByPlate"></div>
+      </div>
+    </section>
+
+    <!-- CLIENTES -->
+    <section class="page hidden" id="page-clientes">
+      <h1>Cadastro de Clientes</h1>
+      <div class="form-wrap">
+        <form id="clienteForm" class="cadastro-form" onsubmit="return salvarCliente(event)">
+          <h2>👤 Novo / Editar cliente</h2>
+          <div class="form-grid">
+            <label>Cliente (nome completo)<input type="text" id="cli_nome" required placeholder="Maria Silva"></label>
+            <label>CPF<input type="text" id="cli_cpf" required placeholder="123.456.789-00" maxlength="14"></label>
+            <label>Contrato<input type="text" id="cli_contrato" required placeholder="CT-001" maxlength="20"></label>
+            <label>Telefone<input type="text" id="cli_tel" placeholder="(11) 99999-0001" maxlength="15"></label>
+            <label>E-mail<input type="email" id="cli_email" placeholder="cliente@email.com"></label>
+            <label>UF (morador)<select id="cli_uf"><option value="RS">RS</option><option value="PR">PR</option><option value="SP" selected>SP</option><option value="MG">MG</option></select></label>
+            <label>RENAVAM do veículo<input type="text" id="cli_renavam" placeholder="01234567890" maxlength="11"></label>
+            <label>Modelo do veículo<input type="text" id="cli_modelo" placeholder="HB20 1.6"></label>
+            <label>Placa do veículo<input type="text" id="cli_placa" placeholder="ABC1D23" maxlength="7"></label>
+            <label>Base do veículo<select id="cli_base"><option value="">Sem veículo</option><option value="RS">RS</option><option value="PR">PR</option><option value="SP">SP</option><option value="MG">MG</option></select></label>
+            <label>Status do veículo<select id="cli_status"><option value="DISPONÍVEL">DISPONÍVEL</option><option value="LOCADO">LOCADO</option><option value="MANUTENÇÃO">MANUTENÇÃO</option><option value="RESERVADO">RESERVADO</option><option value="USO INTERNO">USO INTERNO</option></select></label>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">💾 Salvar cliente</button>
+            <button type="button" class="btn-secondary" onclick="limparClienteForm()">Limpar</button>
+          </div>
+          <div id="cliMsg" class="json-msg"></div>
+        </form>
+      </div>
+
+      <div class="panel">
+        <h2>📒 Lista integrada</h2>
+        <div class="filters">
+          <input type="text" id="cliFiltroTexto" placeholder="Filtrar por nome, CPF ou contrato…" oninput="renderClientes()">
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Cliente</th><th>CPF</th><th>Contrato</th><th>Telefone</th><th>E-mail</th><th>UF</th><th>RENAVAM</th><th>Modelo</th><th>Placa</th><th>Base</th><th>Status</th><th>Ações</th></tr></thead>
+            <tbody id="tbodyClientes"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- RELATÓRIOS -->
+    <section class="page hidden" id="page-relatorios">
+      <h1>Relatórios por Período</h1>
+      <div class="panel no-print">
+        <h2>🔍 Filtros</h2>
+        <div class="relatorio-toolbar">
+          <label>Data início<input type="date" id="relDataInicio"></label>
+          <label>Data fim<input type="date" id="relDataFim"></label>
+          <label>Placa (RENAVAM, modelo ou placa)<input type="text" id="relPlaca" placeholder="Ex.: ABC1D23"></label>
+          <label>Base<select id="relBase"><option value="">Todas</option><option value="RS">RS</option><option value="PR">PR</option><option value="SP">SP</option><option value="MG">MG</option></select></label>
+          <div class="relatorio-actions">
+            <button type="button" class="btn-primary" onclick="renderRelatorio()">📊 Gerar</button>
+            <button type="button" class="btn-primary" onclick="imprimirRelatorio()">🖨 Imprimir</button>
+            <button type="button" class="btn-secondary" onclick="limparFiltrosRelatorio()">Limpar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" id="relatorioPainel">
+        <div class="print-only">
+          <h1>Relatório de Frota — ERP Locadoras</h1>
+          <div class="meta-grid">
+            <div><b>Período:</b> <span id="relPrintPeriodo">—</span></div>
+            <div><b>Base:</b> <span id="relPrintBase">Todas</span></div>
+            <div><b>Placa / busca:</b> <span id="relPrintPlaca">—</span></div>
+            <div><b>Emitido em:</b> <span id="relPrintEmitido">—</span></div>
+            <div><b>Total de veículos:</b> <span id="relPrintTotal">0</span></div>
+            <div><b>Responsável:</b> ERP Locadoras</div>
+          </div>
+        </div>
+        <h2 class="no-print">📈 Resumo do período</h2>
+        <div class="relatorio-summary" id="relatorioSummary"></div>
+        <div class="table-wrap">
+          <table class="relatorio-table" id="relatorioTable">
+            <thead><tr><th>RENAVAM</th><th>Modelo</th><th>Placa</th><th>Base</th><th>Status</th><th>Cliente</th><th>Cadastro</th></tr></thead>
+            <tbody id="relatorioTbody"></tbody>
+          </table>
+        </div>
+        <div class="relatorio-footer-meta">
+          <div><b>ERP Locadoras</b> · contato@erploc.com.br · +55 (11) 4002-8922</div>
+          <div>Página gerada em <span id="relGeradoEm"></span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- USUÁRIOS -->
+    <section class="page hidden" id="page-usuarios">
+      <h1>Cadastro de Usuários</h1>
+      <div class="form-wrap">
+        <form id="userForm" class="cadastro-form" onsubmit="return salvarUsuario(event)">
+          <h2 id="userFormTitle">Novo usuário</h2>
+          <div class="form-grid">
+            <label>Nome completo<input type="text" id="userNome" required maxlength="80" placeholder="Ex.: Maria Silva"></label>
+            <label>Login (usuário)<input type="text" id="userLogin" required maxlength="32" placeholder="ex.: maria"></label>
+            <label>E-mail<input type="email" id="userEmail" required maxlength="120" placeholder="maria@locadora.com.br"></label>
+            <label>Perfil<select id="userPerfil" required><option value="admin">admin</option><option value="operador">operador</option><option value="consulta">consulta</option></select></label>
+            <label>Status<select id="userStatus" required><option value="Ativo">Ativo</option><option value="Inativo">Inativo</option></select></label>
+            <label>Senha<input type="password" id="userSenha" minlength="3" maxlength="64" placeholder="Deixe em branco para manter"></label>
+          </div>
+          <p class="muted" id="userSenhaHint">Preencha a senha ao criar. Em edição, deixe em branco para <em>não</em> alterar.</p>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary" id="userSubmitBtn">💾 Salvar</button>
+            <button type="button" class="btn-secondary" onclick="limparFormUsuario()">Limpar</button>
+          </div>
+          <div id="userMsg" class="json-msg"></div>
+        </form>
+      </div>
+
+      <div class="panel">
+        <h2>👥 Usuários cadastrados</h2>
+        <div class="filters">
+          <input type="text" id="userFiltro" placeholder="Filtrar por nome, login ou e-mail…" oninput="renderUsuarios()">
+          <select id="userFiltroPerfil" onchange="renderUsuarios()"><option value="">Todos</option><option value="admin">admin</option><option value="operador">operador</option><option value="consulta">consulta</option></select>
+          <select id="userFiltroStatus" onchange="renderUsuarios()"><option value="">Todos</option><option value="Ativo">Ativo</option><option value="Inativo">Inativo</option></select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Nome</th><th>Login</th><th>E-mail</th><th>Perfil</th><th>Status</th><th>Criado em</th><th>Ações</th></tr></thead>
+            <tbody id="tbodyUsuarios"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- FINANCEIRO (OFX) -->
+    <section class="page hidden" id="page-financeiro">
+      <h2 style="margin:0 0 4px; color:#facc15;">💰 Financeiro OFX</h2>
+      <p style="margin:0 0 12px; color:#94a3b8; font-size:13px;">Carregue um ou vários .OFX reais — qualquer banco. Entradas/saídas pelo sinal, datas de DTPOSTED e conciliação com o saldo do extrato (BALAMT).</p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+        <input type="file" id="fin_ofx" accept=".ofx,.qfx" multiple style="flex:1;min-width:220px; background:#0f172a; color:#e2e8f0; border:1px solid #475569; border-radius:6px; padding:6px;">
+        <select id="fin_loja_dft" style="padding:6px; background:#0f172a; color:#e2e8f0; border:1px solid #475569; border-radius:6px;"></select>
+        <button onclick="fin_importar()" style="padding:6px 14px;background:#2563eb;color:#fff;border:0;border-radius:8px;cursor:pointer">📥 Importar OFX(s)</button>
+        <button onclick="fin_exemplo()" style="padding:6px 14px;background:#059669;color:#fff;border:0;border-radius:8px;cursor:pointer">🧪 Carregar exemplo</button>
+        <button onclick="fin_export(0)" style="padding:6px 14px;background:#0ea5e9;color:#fff;border:0;border-radius:8px;cursor:pointer">⬇ CSV consolidado</button>
+        <button onclick="fin_export(1)" style="padding:6px 14px;background:#f59e0b;color:#fff;border:0;border-radius:8px;cursor:pointer">⬇ CSV por loja</button>
+        <button onclick="fin_limpar()" style="padding:6px 14px;background:#64748b;color:#fff;border:0;border-radius:8px;cursor:pointer">🗑 Limpar</button>
+      </div>
+      <div id="fin_status" style="margin-bottom:10px"></div>
+      <div style="text-align:right;margin-bottom:8px"><select id="fin_flt_loja" style="padding:6px; background:#0f172a; color:#e2e8f0; border:1px solid #475569; border-radius:6px;"></select></div>
+      <div id="fin_kpis" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px"></div>
+      <div id="fin_concilia" style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px"></div>
+      <div id="fin_bancos" style="margin-bottom:10px;font-size:12px;color:#94a3b8"></div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead><tr style="background:#1e293b;color:#f1f5f9"><th style="padding:6px;border:1px solid #334155">Data</th><th style="padding:6px;border:1px solid #334155">Arquivo</th><th style="padding:6px;border:1px solid #334155">Loja</th><th style="padding:6px;border:1px solid #334155">Descrição</th><th style="padding:6px;border:1px solid #334155">Tipo</th><th style="padding:6px;border:1px solid #334155" align="right">Valor</th><th style="padding:6px;border:1px solid #334155">Categoria</th></tr></thead>
+        <tbody id="fin_tbody"></tbody>
+      </table>
+    </section>
+
+    <!-- ADMIN -->
+    <section class="page hidden" id="page-admin">
+      <h1>Administração</h1>
+      <div class="panel">
+        <h2>🔐 Senha de administrador</h2>
+        <p>Senha atual: <code id="pwdDisplay">admin123</code></p>
+        <div class="form-grid">
+          <label>Nova senha<input type="text" id="newPwd" placeholder="Nova senha"></label>
+        </div>
+        <button class="btn-primary" onclick="alterarSenha()">Atualizar senha</button>
+        <p class="muted" style="margin-top:1rem;">A senha fica salva no navegador (localStorage) como fallback.</p>
+      </div>
+
+      <div class="panel">
+        <h2>💾 Base de dados</h2>
+        <button class="btn-primary" onclick="exportarJSON()">Exportar backup (JSON)</button>
+        <button class="btn-secondary" onclick="document.getElementById('importBackup').click()">Importar backup</button>
+        <input type="file" id="importBackup" accept="application/json" style="display:none" onchange="importarBackup(event)">
+        <button class="btn-danger" onclick="limparBase()">Apagar tudo</button>
+        <p class="muted" style="margin-top:1rem;">A base é simples de alimentar e excluir — use o formulário, ou apague tudo aqui.</p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ===== RODAPÉ ===== -->
+<footer class="footer">
+  <div class="footer-block">
+    <h4>📞 Contato</h4>
+    <p>contato@erploc.com.br</p>
+    <p>+55 (11) 4002-8922</p>
+  </div>
+  <div class="footer-block">
+    <h4>🛠 Suporte</h4>
+    <p>suporte@erploc.com.br</p>
+    <p>Seg–Sex · 8h às 18h</p>
+    <p>WhatsApp: (11) 99999-0001</p>
+  </div>
+  <div class="footer-block">
+    <h4>© ERP Locadoras</h4>
+    <p>Versão 1.2 · API-ready</p>
+  </div>
+</footer>
+
+<!-- ===== MODAL PDF ===== -->
+<div id="pdfModal" class="pdf-modal hidden">
+  <div class="pdf-modal-bar">
+    <h3 id="pdfModalTitle">Documento</h3>
+    <span class="meta" id="pdfModalMeta"></span>
+    <div>
+      <button onclick="downloadCurrentPDF()">⬇ Baixar</button>
+      <button onclick="closePDFModal()">✕ Fechar</button>
+    </div>
+  </div>
+  <div class="pdf-frame-host" id="pdfFrameHost">
+    <iframe id="pdfFrame" src="about:blank" style="width:100%;height:100%;border:none;background:white;" title="Pré-visualização do PDF"></iframe>
+  </div>
+</div>
+
+<button id="logoutBtn" class="logout-btn hidden" onclick="logout()">Sair</button>
+
+<script>
+/* =========================================================
+   ERP LOCADORAS 1.2 – Integração com API Flask + fallback localStorage
+   ========================================================= */
+
+// ---- CONFIGURAÇÃO DA API ----
+const API_BASE = window.location.origin + '/api';  // ex: http://localhost:5000/api
+const USE_API = true;  // tenta usar API; se falhar, fallback para localStorage
+
+// ---- CHAVES LOCALSTORAGE (fallback) ----
+const STORAGE_KEYS = {
+  PWD:      'erp_loc_pwd',
+  PLACAS:   'erp_loc_placas',
+  CLIENTES: 'erp_loc_clientes',
+  USERS:    'erp_loc_users',
+  AUTH:     'erp_loc_auth',
+  AUTH_USER:'erp_loc_auth_user'
+};
+
+const BASES = ['RS', 'PR', 'SP', 'MG'];
+const STATUS_OPCOES = ['DISPONÍVEL', 'LOCADO', 'MANUTENÇÃO', 'RESERVADO', 'USO INTERNO'];
+
+// ---- HELPERS ----
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => document.querySelectorAll(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function load(k, def) {
+  try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? def : v; } catch { return def; }
+}
+function save(k, v) {
+  try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {}
+}
+
+// ---- FUNÇÕES DE ACESSO A DADOS (com fallback) ----
+async function apiFetch(endpoint, options = {}) {
+  const url = API_BASE + endpoint;
+  const resp = await fetch(url, {
+    ...options,
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(options.headers || {})
+    }
+  });
+  if (!resp.ok) {
+    const err = await resp.text().catch(() => resp.statusText);
+    throw new Error(err || `HTTP ${resp.status}`);
+  }
+  return resp.json();
+}
+
+// Placas
+async function getPlacas() {
+  if (USE_API) {
+    try {
+      return await apiFetch('/placas');
+    } catch (e) {
+      console.warn('API /placas falhou, usando localStorage:', e);
+    }
+  }
+  return load(STORAGE_KEYS.PLACAS, []);
+}
+async function salvarPlacaAPI(placa) {
+  if (USE_API) {
+    try {
+      await apiFetch('/placas', { method: 'POST', body: JSON.stringify(placa) });
+      return true;
+    } catch (e) {
+      console.warn('API /placas POST falhou, salvando local:', e);
+    }
+  }
+  const arr = load(STORAGE_KEYS.PLACAS, []);
+  const idx = arr.findIndex(p => p.renavam === placa.renavam);
+  if (idx >= 0) arr[idx] = placa; else arr.push(placa);
+  save(STORAGE_KEYS.PLACAS, arr);
+  return true;
+}
+async function excluirPlacaAPI(renavam) {
+  if (USE_API) {
+    try {
+      await apiFetch('/placas/' + renavam, { method: 'DELETE' });
+      return true;
+    } catch (e) {
+      console.warn('API DELETE falhou, excluindo local:', e);
+    }
+  }
+  const arr = load(STORAGE_KEYS.PLACAS, []).filter(p => p.renavam !== renavam);
+  save(STORAGE_KEYS.PLACAS, arr);
+  return true;
+}
+
+// Clientes
+async function getClientes() {
+  if (USE_API) {
+    try {
+      return await apiFetch('/clientes');
+    } catch (e) {
+      console.warn('API /clientes falhou, usando localStorage:', e);
+    }
+  }
+  return load(STORAGE_KEYS.CLIENTES, []);
+}
+async function salvarClienteAPI(cliente) {
+  if (USE_API) {
+    try {
+      await apiFetch('/clientes', { method: 'POST', body: JSON.stringify(cliente) });
+      return true;
+    } catch (e) {
+      console.warn('API /clientes POST falhou, salvando local:', e);
+    }
+  }
+  const arr = load(STORAGE_KEYS.CLIENTES, []);
+  const idx = arr.findIndex(c => c.contrato === cliente.contrato);
+  if (idx >= 0) arr[idx] = cliente; else arr.push(cliente);
+  save(STORAGE_KEYS.CLIENTES, arr);
+  return true;
+}
+async function excluirClienteAPI(contrato) {
+  if (USE_API) {
+    try {
+      await apiFetch('/clientes/' + contrato, { method: 'DELETE' });
+      return true;
+    } catch (e) {
+      console.warn('API DELETE cliente falhou, excluindo local:', e);
+    }
+  }
+  const arr = load(STORAGE_KEYS.CLIENTES, []).filter(c => c.contrato !== contrato);
+  save(STORAGE_KEYS.CLIENTES, arr);
+  return true;
+}
+
+// Usuários
+async function getUsuarios() {
+  if (USE_API) {
+    try {
+      return await apiFetch('/usuarios');
+    } catch (e) {
+      console.warn('API /usuarios falhou, usando localStorage:', e);
+    }
+  }
+  return load(STORAGE_KEYS.USERS, []);
+}
+async function salvarUsuarioAPI(usuario) {
+  if (USE_API) {
+    try {
+      await apiFetch('/usuarios', { method: 'POST', body: JSON.stringify(usuario) });
+      return true;
+    } catch (e) {
+      console.warn('API /usuarios POST falhou, salvando local:', e);
+    }
+  }
+  const arr = load(STORAGE_KEYS.USERS, []);
+  const idx = arr.findIndex(u => u.id === usuario.id);
+  if (idx >= 0) arr[idx] = usuario; else arr.push(usuario);
+  save(STORAGE_KEYS.USERS, arr);
+  return true;
+}
+async function excluirUsuarioAPI(id) {
+  if (USE_API) {
+    try {
+      await apiFetch('/usuarios/' + id, { method: 'DELETE' });
+      return true;
+    } catch (e) {
+      console.warn('API DELETE usuario falhou, excluindo local:', e);
+    }
+  }
+  const arr = load(STORAGE_KEYS.USERS, []).filter(u => u.id !== id);
+  save(STORAGE_KEYS.USERS, arr);
+  return true;
+}
+
+// Documentos (PDF) – API /documentos
+async function uploadPDFAPI(renavam, file) {
+  const formData = new FormData();
+  formData.append('renavam', renavam);
+  formData.append('pdf', file);
+  const resp = await fetch(API_BASE + '/documentos/upload', {
+    method: 'POST',
+    credentials: 'include',
+    body: formData
+  });
+  if (!resp.ok) {
+    const err = await resp.text();
+    throw new Error(err || 'Upload falhou');
+  }
+  return resp.json();
+}
+async function getDocumentos(renavam) {
+  const url = renavam ? API_BASE + '/documentos?renavam=' + renavam : API_BASE + '/documentos';
+  const resp = await fetch(url, { credentials: 'include' });
+  if (!resp.ok) {
+    const err = await resp.text();
+    throw new Error(err || 'Falha ao buscar documentos');
+  }
+  return resp.json();
+}
+async function deleteDocumentoAPI(id) {
+  const resp = await fetch(API_BASE + '/documentos/' + id, {
+    method: 'DELETE',
+    credentials: 'include'
+  });
+  if (!resp.ok) throw new Error('Falha ao excluir documento');
+}
+async function viewDocumentoAPI(id) {
+  // retorna a URL do blob (ou redireciona para download)
+  return API_BASE + '/documentos/' + id + '/download';
+}
+
+// ---- AUTENTICAÇÃO ----
+async function doLogin(e) {
+  e.preventDefault();
+  const login = $('#loginUser').value.trim();
+  const senha = $('#loginPass').value.trim();
+  const msg = $('#loginMsg');
+  msg.textContent = '';
+  if (!login || !senha) { msg.textContent = 'Preencha usuário e senha.'; msg.style.color = '#FF6B6B'; return false; }
+
+  // Tenta API
+  if (USE_API) {
+    try {
+      const resp = await apiFetch('/login', { method: 'POST', body: JSON.stringify({ login, senha }) });
+      if (resp.ok) {
+        localStorage.setItem(STORAGE_KEYS.AUTH, '1');
+        localStorage.setItem(STORAGE_KEYS.AUTH_USER, login);
+        msg.textContent = 'Bem-vindo, ' + login + ' ✓';
+        msg.style.color = '#7CFC00';
+        unlock();
+        return false;
+      } else {
+        msg.textContent = 'Login ou senha inválidos (API)';
+        msg.style.color = '#FF6B6B';
+        return false;
+      }
+    } catch (e) {
+      console.warn('API login falhou, usando fallback:', e);
+    }
+  }
+
+  // Fallback: admin/admin123 ou lista local
+  if (login === 'admin' && senha === 'admin123') {
+    localStorage.setItem(STORAGE_KEYS.AUTH, '1');
+    localStorage.setItem(STORAGE_KEYS.AUTH_USER, 'admin');
+    msg.textContent = 'Bem-vindo, admin ✓ (fallback)';
+    msg.style.color = '#7CFC00';
+    unlock();
+    return false;
+  }
+
+  const users = load(STORAGE_KEYS.USERS, []);
+  const found = users.find(u => u.login === login && u.senha === senha && u.status === 'Ativo');
+  if (found) {
+    localStorage.setItem(STORAGE_KEYS.AUTH, '1');
+    localStorage.setItem(STORAGE_KEYS.AUTH_USER, found.login);
+    msg.textContent = 'Bem-vindo, ' + found.login + ' ✓';
+    msg.style.color = '#7CFC00';
+    unlock();
+  } else {
+    msg.textContent = 'Login ou senha inválidos (tente admin/admin123)';
+    msg.style.color = '#FF6B6B';
+  }
+  return false;
+}
+
+function logout() {
+  localStorage.removeItem(STORAGE_KEYS.AUTH);
+  localStorage.removeItem(STORAGE_KEYS.AUTH_USER);
+  location.reload();
+}
+
+function lock() {
+  document.body.classList.add('locked');
+  $('#lockedScreen').classList.remove('hidden');
+  $('#logoutBtn').classList.add('hidden');
+}
+function unlock() {
+  document.body.classList.remove('locked');
+  $('#lockedScreen').classList.add('hidden');
+  $('#logoutBtn').classList.remove('hidden');
+  renderAll();
+}
+
+// ---- NAVEGAÇÃO ----
+function showPage(name) {
+  $$('.page').forEach(p => p.classList.add('hidden'));
+  const pg = $('#page-' + name);
+  if (pg) pg.classList.remove('hidden');
+  $$('.nav-link').forEach(a => a.classList.toggle('active', a.dataset.page === name));
+  if (name === 'status') renderStatus();
+  if (name === 'documentos') { renderDocPlacaOptions(); renderDocumentos(); }
+  if (name === 'relatorios') renderRelatorio();
+  if (name === 'usuarios') renderUsuarios();
+  if (name === 'clientes') renderClientes();
+  if (name === 'financeiro') fin_render();
+}
+
+// ---- RENDER DASHBOARD ----
+async function renderDashboard() {
+  const arr = await getPlacas();
+  BASES.forEach((base, i) => {
+    const idx = i + 1;
+    const subset = arr.filter(p => p.base === base);
+    document.getElementById('b'+idx+'-total').textContent = subset.length;
+    document.getElementById('b'+idx+'-disp').textContent  = subset.filter(p => p.status === 'DISPONÍVEL').length;
+    document.getElementById('b'+idx+'-loc').textContent   = subset.filter(p => p.status === 'LOCADO').length;
+    document.getElementById('b'+idx+'-man').textContent   = subset.filter(p => p.status === 'MANUTENÇÃO').length;
+    document.getElementById('b'+idx+'-res').textContent   = subset.filter(p => p.status === 'RESERVADO').length;
+  });
+}
+
+// ---- PLACAS ----
+async function renderPlacas() {
+  const txt  = $('#filtroTexto').value.trim().toLowerCase();
+  const base = $('#filtroBase').value;
+  const st   = $('#filtroStatus').value;
+  const lista = (await getPlacas()).filter(p => {
+    const okTxt  = !txt  || (p.renavam + ' ' + p.modelo + ' ' + p.placa + ' ' + (p.cliente||'')).toLowerCase().includes(txt);
+    const okBase = !base || p.base === base;
+    const okSt   = !st   || p.status === st;
+    return okTxt && okBase && okSt;
+  }).sort((a,b)=> a.base.localeCompare(b.base) || a.modelo.localeCompare(b.modelo));
+
+  const tb = $('#tbodyPlacas');
+  tb.innerHTML = lista.map(p => {
+    const docs = 0; // será atualizado por renderDocumentos
+    return `<tr>
+      <td>${esc(p.renavam)}</td>
+      <td>${esc(p.modelo)}</td>
+      <td><b>${esc(p.placa)}</b></td>
+      <td>${esc(p.base)}</td>
+      <td><span class="badge badge-${esc(p.status)}">${esc(p.status)}</span></td>
+      <td>${esc(p.cliente || '—')}</td>
+      <td><span class="muted">—</span></td>
+      <td>
+        <button class="row-status"  title="Alternar status" onclick="cicloStatus('${esc(p.renavam)}')">↻ Status</button>
+        <button class="row-edit"    title="Editar"          onclick="editarPlaca('${esc(p.renavam)}')">✎ Editar</button>
+        <button class="row-del"     title="Excluir"         onclick="excluirPlaca('${esc(p.renavam)}')">🗑 Excluir</button>
+      </td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="8" style="text-align:center;color:#888;">Nenhum veículo encontrado.</td></tr>';
+}
+
+async function salvarPlaca(e) {
+  e.preventDefault();
+  const rec = {
+    renavam: $('#renavam').value.trim(),
+    modelo:  $('#modelo').value.trim(),
+    placa:   $('#placa').value.trim().toUpperCase(),
+    base:    $('#base').value,
+    status:  $('#status').value,
+    cliente: $('#cliente').value.trim(),
+    cadastro_em: new Date().toISOString().slice(0,10)
+  };
+  if (!rec.renavam || !rec.modelo || !rec.placa) {
+    alert('Preencha RENAVAM, modelo e placa.');
+    return false;
+  }
+  await salvarPlacaAPI(rec);
+  limparForm();
+  renderAll();
+  showPage('placas');
+  return false;
+}
+
+function limparForm() { $('#placaForm').reset(); }
+
+function editarPlaca(renavam) {
+  getPlacas().then(arr => {
+    const p = arr.find(x => x.renavam === renavam);
+    if (!p) return;
+    $('#renavam').value = p.renavam;
+    $('#modelo').value  = p.modelo;
+    $('#placa').value   = p.placa;
+    $('#base').value    = p.base;
+    $('#status').value  = p.status;
+    $('#cliente').value = p.cliente || '';
+    showPage('placas');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+}
+
+async function excluirPlaca(renavam) {
+  if (!confirm('Excluir definitivamente a placa ' + renavam + '?')) return;
+  await excluirPlacaAPI(renavam);
+  renderAll();
+}
+
+async function cicloStatus(renavam) {
+  const arr = await getPlacas();
+  const p = arr.find(x => x.renavam === renavam);
+  if (!p) return;
+  const i = STATUS_OPCOES.indexOf(p.status);
+  p.status = STATUS_OPCOES[(i + 1) % STATUS_OPCOES.length];
+  await salvarPlacaAPI(p);
+  renderAll();
+}
+
+// ---- CLIENTES ----
+async function renderClientes() {
+  const tb = $('#tbodyClientes');
+  const txt = (($('#cliFiltroTexto')?.value || '')).trim().toLowerCase();
+  let lista = await getClientes();
+  if (txt) lista = lista.filter(c =>
+    (c.nome+' '+(c.cpf||'')+' '+(c.contrato||'')+' '+(c.telefone||'')).toLowerCase().includes(txt)
+  );
+  tb.innerHTML = lista.map(c => `
+    <tr>
+      <td>${esc(c.nome||'—')}</td>
+      <td><code>${esc(c.cpf||'—')}</code></td>
+      <td><b>${esc(c.contrato||'—')}</b></td>
+      <td>${esc(c.telefone||'—')}</td>
+      <td>${esc(c.email||'—')}</td>
+      <td><span class="base-uf">${esc(c.uf||'—')}</span></td>
+      <td>${esc(c.renavam||'—')}</td>
+      <td>${esc(c.modelo||'—')}</td>
+      <td><b>${esc(c.placa||'—')}</b></td>
+      <td>${esc(c.base||'—')}</td>
+      <td><span class="badge badge-${esc((c.status||'DISPONÍVEL').replace(/ /g,'\\ '))}">${esc(c.status||'DISPONÍVEL')}</span></td>
+      <td>
+        <button class="row-edit" onclick="editarCliente('${esc(c.contrato||'')}')">✎ Editar</button>
+        <button class="row-del"  onclick="excluirCliente('${esc(c.contrato||'')}')">🗑 Excluir</button>
+      </td>
+    </tr>`).join('') || '<tr><td colspan="12" style="text-align:center;color:#888;padding:18px;">Nenhum cliente cadastrado ainda.</td></tr>';
+}
+
+async function salvarCliente(e) {
+  e.preventDefault();
+  const msg = $('#cliMsg');
+  msg.className = 'json-msg'; msg.textContent = '';
+  const rec = {
+    nome:     $('#cli_nome').value.trim(),
+    cpf:      $('#cli_cpf').value.trim(),
+    contrato: $('#cli_contrato').value.trim().toUpperCase(),
+    telefone: $('#cli_tel').value.trim(),
+    email:    $('#cli_email').value.trim(),
+    uf:       $('#cli_uf').value,
+    renavam:  $('#cli_renavam').value.trim(),
+    modelo:   $('#cli_modelo').value.trim(),
+    placa:    $('#cli_placa').value.trim().toUpperCase(),
+    base:     $('#cli_base').value,
+    status:   $('#cli_status').value,
+    criado_em: new Date().toISOString().slice(0,10)
+  };
+  if (!rec.nome)  { msg.textContent='Informe o nome do cliente.'; msg.classList.add('err'); return false; }
+  if (!rec.cpf)   { msg.textContent='CPF é obrigatório.'; msg.classList.add('err'); return false; }
+  if (!rec.contrato) { msg.textContent='Contrato é obrigatório.'; msg.classList.add('err'); return false; }
+  await salvarClienteAPI(rec);
+  limparClienteForm();
+  renderClientes();
+  msg.textContent = `✓ Cliente "${rec.nome}" (contrato ${rec.contrato}) salvo.`;
+  msg.classList.add('ok');
+  return false;
+}
+
+function limparClienteForm() {
+  $('#clienteForm').reset();
+  $('#cli_uf').value = 'SP';
+  $('#cli_status').value = 'DISPONÍVEL';
+  $('#cliMsg').textContent=''; $('#cliMsg').className='json-msg';
+}
+
+function editarCliente(contrato) {
+  if (!contrato) return;
+  getClientes().then(lista => {
+    const c = lista.find(x => x.contrato === contrato);
+    if (!c) return;
+    $('#cli_nome').value     = c.nome || '';
+    $('#cli_cpf').value      = c.cpf || '';
+    $('#cli_contrato').value = c.contrato || '';
+    $('#cli_tel').value      = c.telefone || '';
+    $('#cli_email').value    = c.email || '';
+    $('#cli_uf').value       = c.uf || 'SP';
+    $('#cli_renavam').value  = c.renavam || '';
+    $('#cli_modelo').value   = c.modelo || '';
+    $('#cli_placa').value    = c.placa || '';
+    $('#cli_base').value     = c.base || '';
+    $('#cli_status').value   = c.status || 'DISPONÍVEL';
+    showPage('clientes');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+}
+
+async function excluirCliente(contrato) {
+  if (!contrato) return;
+  if (!confirm('Excluir definitivamente o cliente do contrato ' + contrato + '?')) return;
+  await excluirClienteAPI(contrato);
+  renderClientes();
+}
+
+// ---- STATUS RÁPIDO ----
+async function renderStatus() {
+  const arr  = await getPlacas();
+  const txt  = ($('#statusFiltroTexto').value || '').trim().toLowerCase();
+  const base = $('#statusFiltroBase').value;
+
+  const tot = arr.length;
+  const disp = arr.filter(p => p.status === 'DISPONÍVEL').length;
+  const loc  = arr.filter(p => p.status === 'LOCADO').length;
+  const man  = arr.filter(p => p.status === 'MANUTENÇÃO').length;
+  const res  = arr.filter(p => p.status === 'RESERVADO').length;
+  const uso  = arr.filter(p => p.status === 'USO INTERNO').length;
+  $('#statusSummary').innerHTML = `
+    <span class="chip">Total: ${tot}</span>
+    <span class="chip ok">✓ DISPONÍVEL: ${disp}</span>
+    <span class="chip loc">✗ LOCADO: ${loc}</span>
+    <span class="chip man">⚙ MANUTENÇÃO: ${man}</span>
+    <span class="chip res">📌 RESERVADO: ${res}</span>
+    <span class="chip uso">🛠 USO INTERNO: ${uso}</span>
+  `;
+
+  const lista = arr.filter(p => {
+    const okTxt  = !txt  || (p.placa + ' ' + p.modelo + ' ' + p.renavam).toLowerCase().includes(txt);
+    const okBase = !base || p.base === base;
+    return okTxt && okBase;
+  }).sort((a,b) => a.placa.localeCompare(b.placa));
+
+  const grid = $('#statusGrid');
+  grid.innerHTML = lista.length ? lista.map(p => `
+    <div class="status-card s-${esc(p.status)}" onclick="irParaPlaca('${esc(p.renavam)}')">
+      <div class="placa">${esc(p.placa)}</div>
+      <div class="modelo">${esc(p.modelo)}</div>
+      <span class="base-tag">${esc(p.base)}</span>
+      <div><span class="badge badge-${esc(p.status)}">${esc(p.status)}</span></div>
+    </div>`).join('') : '<p class="muted" style="grid-column:1/-1;text-align:center;">Nenhum veículo encontrado.</p>';
+}
+
+function filtrarStatusRapido(status) {
+  $('#statusFiltroTexto').value = '';
+  $('#statusFiltroBase').value  = '';
+  getPlacas().then(arr => {
+    const lista = arr.filter(p => p.status === status).sort((a,b) => a.placa.localeCompare(b.placa));
+    const grid = $('#statusGrid');
+    grid.innerHTML = lista.length ? lista.map(p => `
+      <div class="status-card s-${esc(p.status)}" onclick="irParaPlaca('${esc(p.renavam)}')">
+        <div class="placa">${esc(p.placa)}</div>
+        <div class="modelo">${esc(p.modelo)}</div>
+        <span class="base-tag">${esc(p.base)}</span>
+        <div><span class="badge badge-${esc(p.status)}">${esc(p.status)}</span></div>
+      </div>`).join('') : '<p class="muted" style="grid-column:1/-1;text-align:center;">Nenhum veículo com status "'+esc(status)+'".</p>';
+  });
+}
+
+function irParaPlaca(renavam) {
+  showPage('placas');
+  editarPlaca(renavam);
+}
+
+// ---- DOCUMENTOS (PDF) ----
+async function renderDocPlacaOptions() {
+  const sel = $('#docPlaca');
+  const cur = sel.value;
+  const arr = await getPlacas();
+  sel.innerHTML = '<option value="">-- escolha uma placa --</option>' +
+    arr.map(p => `<option value="${esc(p.renavam)}">${esc(p.placa)} — ${esc(p.modelo)} (${esc(p.base)})</option>`).join('');
+  if (cur && arr.find(p => p.renavam === cur)) sel.value = cur;
+}
+
+async function uploadPDF() {
+  const msg = $('#docMsg');
+  msg.className = 'json-msg'; msg.textContent = '';
+  const renavam = $('#docPlaca').value;
+  const file = $('#docFile').files[0];
+  if (!renavam) { msg.textContent = 'Selecione a placa de destino.'; msg.classList.add('err'); return; }
+  if (!file) { msg.textContent = 'Selecione um arquivo PDF.'; msg.classList.add('err'); return; }
+  if (!/pdf/i.test(file.type) && !/\.pdf$/i.test(file.name)) {
+    msg.textContent = 'Apenas arquivos PDF são aceitos.'; msg.classList.add('err'); return;
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    msg.textContent = 'Arquivo muito grande (máx 10 MB).'; msg.classList.add('err'); return;
+  }
+  try {
+    if (USE_API) {
+      await uploadPDFAPI(renavam, file);
+      msg.textContent = `✓ "${file.name}" enviado ao servidor.`;
+    } else {
+      // fallback: IndexedDB local
+      const arrBuf = await file.arrayBuffer();
+      const doc = {
+        id: renavam + '_' + Date.now() + '_' + Math.random().toString(36).slice(2,8),
+        renavam,
+        name: file.name,
+        size: file.size,
+        type: 'application/pdf',
+        blob: arrBuf,
+        uploadedAt: new Date().toISOString()
+      };
+      await idbPut(doc);
+      msg.textContent = `✓ "${file.name}" arquivado localmente.`;
+    }
+    msg.classList.add('ok');
+    $('#docFile').value = '';
+    renderDocumentos();
+    renderStatus();
+    renderPlacas();
+  } catch (e) {
+    msg.textContent = 'Erro ao salvar: ' + e.message;
+    msg.classList.add('err');
+  }
+}
+
+async function renderDocumentos() {
+  const host = $('#docsByPlate');
+  try {
+    let docs = [];
+    if (USE_API) {
+      docs = await getDocumentos();
+    } else {
+      docs = await idbAll();
+    }
+    const byRenavam = {};
+    docs.forEach(d => { (byRenavam[d.renavam] = byRenavam[d.renavam] || []).push(d); });
+    const renavams = Object.keys(byRenavam).sort();
+    if (!renavams.length) {
+      host.innerHTML = '<p class="muted">Nenhum documento arquivado ainda.</p>';
+      return;
+    }
+    const placas = await getPlacas();
+    host.innerHTML = renavams.map(r => {
+      const p = placas.find(x => x.renavam === r);
+      const titulo = p ? `${p.modelo} <span class="placa-tag">${esc(p.placa)}</span> · ${esc(p.base)}` : `RENAVAM ${esc(r)}`;
+      const docsHtml = byRenavam[r].map(d => `
+        <li>
+          <div class="doc-info">
+            <b>📄 ${esc(d.name)}</b>
+            <small>${(d.size/1024).toFixed(1)} KB · ${new Date(d.uploadedAt || d.enviado_em).toLocaleString('pt-BR')}</small>
+          </div>
+          <div class="doc-actions">
+            <button class="btn-view" onclick="viewPDF('${esc(d.id)}')">👁 Visualizar</button>
+            <button class="btn-dl"   onclick="downloadPDF('${esc(d.id)}')">⬇ Baixar</button>
+            <button class="btn-x"    onclick="deletePDF('${esc(d.id)}','${esc(d.name)}')">🗑 Excluir</button>
+          </div>
+        </li>`).join('');
+      return `<div class="doc-plate-block"><h3>${titulo}</h3><ul class="doc-list">${docsHtml}</ul></div>`;
+    }).join('');
+  } catch (e) {
+    host.innerHTML = '<p class="muted">Erro ao carregar documentos: ' + e.message + '</p>';
+  }
+}
+
+async function viewPDF(id) {
+  try {
+    if (USE_API) {
+      const url = API_BASE + '/documentos/' + id + '/download';
+      window.open(url, '_blank');
+      return;
+    }
+    // Fallback: IndexedDB
+    const doc = await idbGet(id);
+    if (!doc) { alert('Documento não encontrado.'); return; }
+    const blob = new Blob([doc.blob], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (e) {
+    alert('Erro ao visualizar: ' + e.message);
+  }
+}
+
+async function downloadPDF(id) {
+  try {
+    if (USE_API) {
+      const url = API_BASE + '/documentos/' + id + '/download';
+      const a = document.createElement('a');
+      a.href = url; a.download = 'documento.pdf';
+      document.body.appendChild(a); a.click(); a.remove();
+      return;
+    }
+    const doc = await idbGet(id);
+    if (!doc) return;
+    const blob = new Blob([doc.blob], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = doc.name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (e) {
+    alert('Erro ao baixar: ' + e.message);
+  }
+}
+
+async function deletePDF(id, name) {
+  if (!confirm(`Excluir "${name}"?`)) return;
+  try {
+    if (USE_API) {
+      await deleteDocumentoAPI(id);
+    } else {
+      await idbDelete(id);
+    }
+    renderDocumentos();
+  } catch (e) {
+    alert('Erro ao excluir: ' + e.message);
+  }
+}
+
+// ---- IDB FALLBACK para PDFs ----
+function idbOpen() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('erp_loc_pdfs', 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains('docs')) {
+        db.createObjectStore('docs', { keyPath: 'id' });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror   = () => reject(req.error);
+  });
+}
+function idbPut(doc) {
+  return idbOpen().then(db => new Promise((res, rej) => {
+    const tx = db.transaction('docs', 'readwrite');
+    tx.objectStore('docs').put(doc);
+    tx.oncomplete = res;
+    tx.onerror = rej;
+  }));
+}
+function idbAll() {
+  return idbOpen().then(db => new Promise((res, rej) => {
+    const tx = db.transaction('docs', 'readonly');
+    const req = tx.objectStore('docs').getAll();
+    req.onsuccess = () => res(req.result);
+    req.onerror = rej;
+  }));
+}
+function idbGet(id) {
+  return idbOpen().then(db => new Promise((res, rej) => {
+    const tx = db.transaction('docs', 'readonly');
+    const req = tx.objectStore('docs').get(id);
+    req.onsuccess = () => res(req.result);
+    req.onerror = rej;
+  }));
+}
+function idbDelete(id) {
+  return idbOpen().then(db => new Promise((res, rej) => {
+    const tx = db.transaction('docs', 'readwrite');
+    tx.objectStore('docs').delete(id);
+    tx.oncomplete = res;
+    tx.onerror = rej;
+  }));
+}
+
+// ---- RELATÓRIO ----
+function fmtBR(iso) {
+  if (!iso) return '—';
+  const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? m[3] + '/' + m[2] + '/' + m[1] : iso;
+}
+function fmtAgoraBR() {
+  const d = new Date();
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const aa = d.getFullYear();
+  const hh = String(d.getHours()).padStart(2,'0');
+  const mi = String(d.getMinutes()).padStart(2,'0');
+  return dd + '/' + mm + '/' + aa + ' ' + hh + ':' + mi;
+}
+
+async function renderRelatorio() {
+  const di = $('#relDataInicio').value || '';
+  const df = $('#relDataFim').value    || '';
+  const bp = ($('#relPlaca').value || '').trim().toLowerCase();
+  const bb = $('#relBase').value || '';
+
+  const lista = (await getPlacas()).filter(p => {
+    if (di && p.cadastro_em && p.cadastro_em < di) return false;
+    if (df && p.cadastro_em && p.cadastro_em > df) return false;
+    if (bb && p.base !== bb) return false;
+    if (bp) {
+      const hay = (p.renavam + ' ' + p.modelo + ' ' + p.placa + ' ' + (p.cliente||'')).toLowerCase();
+      if (!hay.includes(bp)) return false;
+    }
+    return true;
+  }).sort((a,b) => (a.cadastro_em||'').localeCompare(b.cadastro_em||'') || a.placa.localeCompare(b.placa));
+
+  const total = lista.length;
+  const disp  = lista.filter(p => p.status === 'DISPONÍVEL').length;
+  const loc   = lista.filter(p => p.status === 'LOCADO').length;
+  const man   = lista.filter(p => p.status === 'MANUTENÇÃO').length;
+  const res   = lista.filter(p => p.status === 'RESERVADO').length;
+  const uso   = lista.filter(p => p.status === 'USO INTERNO').length;
+  $('#relatorioSummary').innerHTML = `
+    <div class="sum-card"><span class="num">${total}</span><span class="lbl">Veículos no filtro</span></div>
+    <div class="sum-card ok"><span class="num">${disp}</span><span class="lbl">DISPONÍVEL</span></div>
+    <div class="sum-card loc"><span class="num">${loc}</span><span class="lbl">LOCADO</span></div>
+    <div class="sum-card man"><span class="num">${man}</span><span class="lbl">MANUTENÇÃO</span></div>
+    <div class="sum-card res"><span class="num">${res}</span><span class="lbl">RESERVADO</span></div>
+    <div class="sum-card uso"><span class="num">${uso}</span><span class="lbl">USO INTERNO</span></div>
+  `;
+
+  const tb = $('#relatorioTbody');
+  tb.innerHTML = lista.map(p => `
+    <tr>
+      <td>${esc(p.renavam)}</td>
+      <td>${esc(p.modelo)}</td>
+      <td><b>${esc(p.placa)}</b></td>
+      <td>${esc(p.base)}</td>
+      <td><span class="badge badge-${esc(p.status)}">${esc(p.status)}</span></td>
+      <td>${esc(p.cliente || '—')}</td>
+      <td>${esc(fmtBR(p.cadastro_em))}</td>
+    </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;color:#777;padding:24px;">Nenhum veículo corresponde aos filtros.</td></tr>';
+
+  $('#relPrintPeriodo').textContent = (di||'início') + ' até ' + (df||'hoje');
+  $('#relPrintBase').textContent    = bb || 'Todas as bases';
+  $('#relPrintPlaca').textContent   = ($('#relPlaca').value || '—');
+  $('#relPrintTotal').textContent   = total;
+  $('#relPrintEmitido').textContent = fmtAgoraBR();
+  $('#relGeradoEm').textContent     = fmtAgoraBR();
+}
+
+function limparFiltrosRelatorio() {
+  $('#relDataInicio').value = '';
+  $('#relDataFim').value    = '';
+  $('#relPlaca').value      = '';
+  $('#relBase').value       = '';
+  renderRelatorio();
+}
+
+function imprimirRelatorio() {
+  renderRelatorio();
+  window.print();
+}
+
+// ---- USUÁRIOS ----
+let _userEditingId = null;
+
+async function renderUsuarios() {
+  const arr = await getUsuarios();
+  const txt   = ($('#userFiltro').value || '').trim().toLowerCase();
+  const filPe = $('#userFiltroPerfil').value;
+  const filSt = $('#userFiltroStatus').value;
+  const lista = arr.filter(u => {
+    const okTxt = !txt || ((u.nome||'') + ' ' + (u.login||'') + ' ' + (u.email||'')).toLowerCase().includes(txt);
+    const okPe  = !filPe || u.perfil === filPe;
+    const okSt  = !filSt || u.status === filSt;
+    return okTxt && okPe && okSt;
+  }).sort((a,b) => (a.nome||'').localeCompare(b.nome||''));
+  const tb = $('#tbodyUsuarios');
+  tb.innerHTML = lista.map(u => `
+    <tr>
+      <td>${esc(u.nome)}</td>
+      <td><b>${esc(u.login)}</b></td>
+      <td>${esc(u.email)}</td>
+      <td><span class="badge ${u.perfil==='admin'?'badge-Disponível':u.perfil==='operador'?'badge-Manutenção':'badge-Locado'}">${esc(u.perfil)}</span></td>
+      <td><span class="badge ${u.status==='Ativo'?'badge-Disponível':'badge-Locado'}">${esc(u.status)}</span></td>
+      <td>${esc(fmtBR(u.criado_em))}</td>
+      <td>
+        <button class="row-edit" onclick="editarUsuario('${esc(u.id)}')">✎ Editar</button>
+        <button class="row-del"  onclick="excluirUsuario('${esc(u.id)}')">🗑 Excluir</button>
+      </td>
+    </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;color:#888;padding:18px;">Nenhum usuário encontrado.</td></tr>';
+}
+
+async function salvarUsuario(e) {
+  e.preventDefault();
+  const msg = $('#userMsg');
+  msg.className = 'json-msg'; msg.textContent = '';
+  const nome   = $('#userNome').value.trim();
+  const login  = $('#userLogin').value.trim();
+  const email  = $('#userEmail').value.trim();
+  const perfil = $('#userPerfil').value;
+  const status = $('#userStatus').value;
+  const senha  = $('#userSenha').value;
+  if (!nome || !login || !email || !perfil || !status) {
+    msg.textContent = 'Preencha todos os campos.'; msg.classList.add('err'); return false;
+  }
+  if (!/^[a-zA-Z0-9._-]{2,32}$/.test(login)) {
+    msg.textContent = 'Login inválido.'; msg.classList.add('err'); return false;
+  }
+  const arr = await getUsuarios();
+  if (_userEditingId) {
+    const idx = arr.findIndex(u => u.id === _userEditingId);
+    if (idx < 0) { msg.textContent = 'Usuário não encontrado.'; msg.classList.add('err'); return false; }
+    const dup = arr.find(u => u.id !== _userEditingId && u.login.toLowerCase() === login.toLowerCase());
+    if (dup) { msg.textContent = 'Login já existe.'; msg.classList.add('err'); return false; }
+    arr[idx].nome = nome; arr[idx].login = login; arr[idx].email = email;
+    arr[idx].perfil = perfil; arr[idx].status = status;
+    if (senha && senha.length >= 3) arr[idx].senha = senha;
+    await salvarUsuarioAPI(arr[idx]);
+    msg.textContent = `✓ Usuário "${arr[idx].login}" atualizado.`; msg.classList.add('ok');
+  } else {
+    if (!senha || senha.length < 3) {
+      msg.textContent = 'Senha obrigatória (mínimo 3 caracteres).'; msg.classList.add('err'); return false;
+    }
+    if (arr.find(u => u.login.toLowerCase() === login.toLowerCase())) {
+      msg.textContent = 'Login já existe.'; msg.classList.add('err'); return false;
+    }
+    const u = {
+      id: 'u_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+      nome, login, email, perfil, status, senha,
+      criado_em: new Date().toISOString().slice(0,10)
+    };
+    await salvarUsuarioAPI(u);
+    msg.textContent = `✓ Usuário "${u.login}" criado.`; msg.classList.add('ok');
+  }
+  limparFormUsuario();
+  renderUsuarios();
+  return false;
+}
+
+function limparFormUsuario() {
+  $('#userForm').reset();
+  _userEditingId = null;
+  document.getElementById('userFormTitle').textContent = 'Novo usuário';
+  document.getElementById('userSubmitBtn').textContent = '💾 Salvar';
+  document.getElementById('userSenhaHint').innerHTML = 'Preencha a senha ao criar. Em edição, deixe em branco para <em>não</em> alterar.';
+  $('#userSenha').required = true;
+  $('#userMsg').textContent = '';
+}
+
+function editarUsuario(id) {
+  getUsuarios().then(arr => {
+    const u = arr.find(x => x.id === id);
+    if (!u) return;
+    _userEditingId = id;
+    $('#userNome').value = u.nome;
+    $('#userLogin').value = u.login;
+    $('#userEmail').value = u.email;
+    $('#userPerfil').value = u.perfil;
+    $('#userStatus').value = u.status;
+    $('#userSenha').value = '';
+    document.getElementById('userFormTitle').textContent = 'Editar: ' + u.login;
+    document.getElementById('userSubmitBtn').textContent = '💾 Atualizar';
+    document.getElementById('userSenhaHint').innerHTML = 'Modo edição: deixe a senha em branco para <em>não</em> alterar.';
+    $('#userSenha').required = false;
+    showPage('usuarios');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+}
+
+async function excluirUsuario(id) {
+  const arr = await getUsuarios();
+  const u = arr.find(x => x.id === id);
+  if (!u) return;
+  if (u.login === 'admin') { alert('O usuário "admin" padrão não pode ser excluído.'); return; }
+  if (localStorage.getItem(STORAGE_KEYS.AUTH_USER) === u.login) {
+    alert('Você não pode excluir o usuário logado.'); return;
+  }
+  if (!confirm('Excluir "' + u.login + '"?')) return;
+  await excluirUsuarioAPI(id);
+  renderUsuarios();
+}
+
+// ---- ADMIN (senha e backup) ----
+function alterarSenha() {
+  const v = $('#newPwd').value.trim();
+  if (!v) { alert('Digite a nova senha.'); return; }
+  save(STORAGE_KEYS.PWD, v);
+  $('#newPwd').value = '';
+  $('#pwdDisplay').textContent = v;
+  alert('Senha atualizada.');
+}
+function exportarJSON() {
+  getPlacas().then(placas => getClientes().then(clientes => {
+    const blob = new Blob([JSON.stringify({ placas, clientes }, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'erp-loc-backup-' + Date.now() + '.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  }));
+}
+function importarBackup(e) {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const d = JSON.parse(r.result);
+      if (Array.isArray(d.placas)) {
+        d.placas.forEach(p => salvarPlacaAPI(p));
+      }
+      if (Array.isArray(d.clientes)) {
+        d.clientes.forEach(c => salvarClienteAPI(c));
+      }
+      alert('Backup restaurado.');
+      renderAll();
+    } catch (err) { alert('Arquivo inválido: ' + err.message); }
+  };
+  r.readAsText(f);
+}
+function limparBase() {
+  if (!confirm('Apagar TODAS as placas e clientes?')) return;
+  getPlacas().then(arr => arr.forEach(p => excluirPlacaAPI(p.renavam)));
+  getClientes().then(arr => arr.forEach(c => excluirClienteAPI(c.contrato)));
+  renderAll();
+  alert('Base limpa.');
+}
+
+// ---- CONSULTA RÁPIDA ----
+async function quickSearch() {
+  const q = $('#quickSearch').value.trim().toLowerCase();
+  const out = $('#quickResult');
+  if (!q) { out.innerHTML = '<p class="muted">Digite algo para buscar.</p>'; return; }
+  const arr = (await getPlacas()).filter(p =>
+    (p.renavam+' '+p.modelo+' '+p.placa+' '+(p.cliente||'')).toLowerCase().includes(q)
+  );
+  if (!arr.length) { out.innerHTML = '<p class="muted">Nada encontrado para "'+esc(q)+'".</p>'; return; }
+  out.innerHTML = arr.map(p => `
+    <div class="qcard">
+      <b>${esc(p.modelo)}</b> · Placa <b>${esc(p.placa)}</b> · RENAVAM <code>${esc(p.renavam)}</code><br>
+      Base: <b>${esc(p.base)}</b> · Status: <span class="badge badge-${esc(p.status)}">${esc(p.status)}</span>
+      ${p.cliente ? ' · Cliente: '+esc(p.cliente) : ''}
+    </div>`).join('');
+}
+
+// ---- FINANCEIRO (OFX) ----
+// (Código do módulo financeiro permanece o mesmo, com adaptação para usar API)
+// Incluído inline abaixo.
+
+// ---- RENDER ALL ----
+async function renderAll() {
+  await renderDashboard();
+  await renderPlacas();
+  await renderClientes();
+  await renderStatus();
+  await renderDocPlacaOptions();
+  await renderDocumentos();
+  await renderRelatorio();
+  await renderUsuarios();
+  fin_render();
+  const u = localStorage.getItem(STORAGE_KEYS.AUTH_USER);
+  const btn = document.getElementById('logoutBtn');
+  if (btn && u) btn.textContent = 'Sair (' + u + ')';
+}
+
+// ---- INICIALIZAÇÃO ----
+document.addEventListener('DOMContentLoaded', () => {
+  // Verifica se já está autenticado
+  if (localStorage.getItem(STORAGE_KEYS.AUTH) === '1') {
+    unlock();
+  } else {
+    lock();
+  }
+  // Inicializa o módulo financeiro
+  iniciarFinanceiro();
+  // Eventos de navegação
+  document.querySelectorAll('.nav-link').forEach(a => {
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      showPage(a.dataset.page);
+    });
+  });
+  // Filtros
+  ['filtroTexto','filtroBase','filtroStatus'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', renderPlacas);
+  });
+  // Senha atual
+  const pwd = localStorage.getItem(STORAGE_KEYS.PWD) || 'admin123';
+  document.getElementById('pwdDisplay').textContent = pwd;
+  // Fechar modal PDF com ESC
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closePDFModal();
+  });
+});
+
+// ---- FINANCEIRO ----
+const KEY = 'erp_loc_fin_v18';
+const CATS = [
+  {"n": "Consórcio", "t": "D"}, {"n": "Empr. Bancos", "t": "D"}, {"n": "Tarif. Banc", "t": "D"},
+  {"n": "Multas", "t": "D"}, {"n": "Financiamento", "t": "D"}, {"n": "Desp. Sócios", "t": "D"},
+  {"n": "P. Terceiros", "t": "D"}, {"n": "Desp. Viagem", "t": "D"}, {"n": "Serv. Limpeza", "t": "D"},
+  {"n": "Manut. Veíc.", "t": "D"}, {"n": "Rastreamento", "t": "D"}, {"n": "Reembolso", "t": "D"},
+  {"n": "Cap. Giro", "t": "D"}, {"n": "Correios", "t": "D"}, {"n": "Mat. Esc.", "t": "D"},
+  {"n": "Hon. Advogados", "t": "D"}, {"n": "Salários", "t": "D"}, {"n": "Comp. Pneus", "t": "D"},
+  {"n": "Sist. e Plataf.", "t": "D"}, {"n": "Adiant. Salarial", "t": "D"}, {"n": "Pró-Labore Samir", "t": "D"},
+  {"n": "Exames Médicos", "t": "D"}, {"n": "Plano Saúde Colab.", "t": "D"}, {"n": "Telef. e Internet", "t": "D"},
+  {"n": "Taxa Ambiental", "t": "D"}, {"n": "Simples Nacional", "t": "D"}, {"n": "Comissão Vendas", "t": "D"},
+  {"n": "FGTS / Multa Rescis.", "t": "D"}, {"n": "Assinaturas e Mensal.", "t": "D"}, {"n": "Rescisões", "t": "D"},
+  {"n": "Fretes", "t": "D"}, {"n": "Pró-Labore Simone", "t": "D"}, {"n": "Hon. Contábeis", "t": "D"},
+  {"n": "Impostos", "t": "D"}, {"n": "Energia Elétrica", "t": "D"}, {"n": "Combustível", "t": "D"},
+  {"n": "Lavagem Veículos", "t": "D"}, {"n": "Diárias", "t": "D"}, {"n": "Despachante", "t": "D"},
+  {"n": "Estacionamento", "t": "D"}, {"n": "Pedágios", "t": "D"}, {"n": "IPVA", "t": "D"},
+  {"n": "Receitas de Vendas", "t": "R"}, {"n": "Reembolso Multas", "t": "R"}, {"n": "Reembolso Pedágio", "t": "R"},
+  {"n": "Reembolso Lavagem", "t": "R"}, {"n": "Reembolso Combustível", "t": "R"}, {"n": "Outros Reembolsos", "t": "R"},
+  {"n": "Rendimentos", "t": "R"}, {"n": "Antecipação", "t": "R"}, {"n": "Reembolso Avarias", "t": "R"}
+];
+const RULES = [
+  ['posto|combust|combs|gasolina|diesel|etanol','Combustível'],
+  ['ipva','IPVA'],
+  ['pedag|free ?flow','Pedágios'],
+  ['multa','Multas'],
+  ['salario|salarios|folha|proventos','Salários'],
+  ['energia|cpfl|eletro|enel|cemig|celesc|light','Energia Elétrica'],
+  ['telefon|vivo|claro|tim|internet|fibra','Telef. e Internet'],
+  ['tarif|iof|cpmf|tac|manut.*conta','Tarif. Banc'],
+  ['pneu','Comp. Pneus'],
+  ['manut|oficina|pecas','Manut. Veíc.'],
+  ['lavag|lava ?carro','Lavagem Veículos'],
+  ['limpeza|limp|diarista','Serv. Limpeza'],
+  ['exame|medic','Exames Médicos'],
+  ['plano de saude','Plano Saúde Colab.'],
+  ['consorcio','Consórcio'],
+  ['financ','Financiamento'],
+  ['emprestimo|empr. ?banc','Empr. Bancos'],
+  ['socios','Desp. Sócios'],
+  ['terceir','P. Terceiros'],
+  ['viagem','Desp. Viagem'],
+  ['rastre|gps','Rastreamento'],
+  ['capital de giro|cap.?giro','Cap. Giro'],
+  ['correio','Correios'],
+  ['material de escritorio|mat.?esc|papelaria','Mat. Esc.'],
+  ['advocac|advogad|hon.?advo','Hon. Advogados'],
+  ['adiant','Adiant. Salarial'],
+  ['pro ?labore|prolabore','Pró-Labore Samir'],
+  ['fgts|rescisor','FGTS / Multa Rescis.'],
+  ['assinatura|mensalidade','Assinaturas e Mensal.'],
+  ['rescis','Rescisões'],
+  ['frete','Fretes'],
+  ['contabil','Hon. Contábeis'],
+  ['imposto|darf|gps|icms|iss','Impostos'],
+  ['simples','Simples Nacional'],
+  ['sistema|plataforma|software','Sist. e Plataf.'],
+  ['taxa ambiental|ambiental','Taxa Ambiental'],
+  ['comissao','Comissão Vendas'],
+  ['estacionamento','Estacionamento'],
+  ['despachante','Despachante'],
+  ['diaria|hospedagem','Diárias']
+];
+const LOJAS = ['RS','PR','SP','MG'];
+
+function fmt(v) {
+  if (v == null || isNaN(v)) return '—';
+  let neg = v < 0;
+  let s = Math.abs(v).toFixed(2).replace('.', ',');
+  s = s.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return (neg ? '-' : '') + 'R$ ' + s;
+}
+
+function vazio() {
+  const base = {};
+  LOJAS.forEach(u => base[u] = { txns: [], meta: {} });
+  return { lojas: base };
+}
+function loadFin() {
+  try { const x = JSON.parse(localStorage.getItem(KEY)); if (x && x.lojas) return x; } catch(e) {}
+  return vazio();
+}
+function saveFin() {
+  try { localStorage.setItem(KEY, JSON.stringify(stFin)); } catch(e) {}
+}
+let stFin = loadFin();
+
+function ofxDateISO(raw) {
+  if (!raw) return '';
+  const m = String(raw).trim().replace(/\[[^\]]*\]/g,'');
+  const r = m.match(/^(\d{4})(\d{2})(\d{2})(?:(\d{2})(\d{2})(\d{2}))?$/);
+  if (r) return r[1]+'-'+r[2]+'-'+r[3]+(r[4]?('T'+r[4]+':'+r[5]+':'+r[6]):'');
+  const d = new Date(m);
+  if (!isNaN(d)) return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+  const dm = m.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (dm) return dm[3]+'-'+('0'+dm[2]).slice(-2)+'-'+('0'+dm[1]).slice(-2);
+  return '';
+}
+function ofxDateHuman(iso) {
+  if (!iso) return '';
+  const p = iso.slice(0,10).split('-');
+  return p[2]+'/'+p[1]+'/'+p[0];
+}
+function parseOfxAmount(v) {
+  let s = String(v==null?'':v).trim().replace(/\s+/g,'').replace(/[R$\s]/g,'');
+  let neg = false;
+  if (/^\(.*\)$/.test(s)) { neg = true; s = s.replace(/[()]/g,''); }
+  if (/^-/.test(s)) { neg = true; s = s.slice(1); }
+  const c = s.indexOf(',');
+  if (c >= 0) { s = s.slice(0,c).replace(/\./g,'') + '.' + s.slice(c+1); }
+  else { const dots = (s.split('.').length - 1); if (dots > 1) s = s.replace(/\./g,''); }
+  const n = parseFloat(s);
+  return isNaN(n) ? 0 : (neg ? -Math.abs(n) : Math.abs(n));
+}
+function autoCat(t) {
+  const txt = ((t.descricao||'')+' '+(t.memo||'')).toLowerCase();
+  if (t.direcao === 'ENTRADA') {
+    if (/reemb/.test(txt)) {
+      if (/multa/.test(txt)) return 'Reembolso Multas';
+      if (/pedag/.test(txt)) return 'Reembolso Pedágio';
+      if (/lavag/.test(txt)) return 'Reembolso Lavagem';
+      if (/combust|posto/.test(txt)) return 'Reembolso Combustível';
+      if (/avaria/.test(txt)) return 'Reembolso Avarias';
+      return 'Outros Reembolsos';
+    }
+    if (/venda|aluguel|locac|recebimento|recebido|mensalidade/.test(txt)) return 'Receitas de Vendas';
+    if (/rendimento|juros|poupanca/.test(txt)) return 'Rendimentos';
+    if (/antecip/.test(txt)) return 'Antecipação';
+    return '';
+  }
+  for (let i=0; i<RULES.length; i++) {
+    if (new RegExp(RULES[i][0], 'i').test(txt)) return RULES[i][1];
+  }
+  return '';
+}
+function lojaDeAcct(acctid) {
+  const a = String(acctid||'');
+  // Mapeamento simples: se contiver "RS", "PR", etc.
+  for (let i=0; i<LOJAS.length; i++) {
+    if (a.includes(LOJAS[i])) return LOJAS[i];
+  }
+  return '';
+}
+
+function fin_status(msg, err) {
+  const el = document.getElementById('fin_status');
+  if (!el) return;
+  el.innerHTML = (err ? '<span style="color:#f87171">' : '<span style="color:#4ade80">') + esc(msg) + '</span>';
+}
+
+function fin_render() {
+  const sel = document.getElementById('fin_flt_loja');
+  const flt = sel ? sel.value : '';
+  const k = document.getElementById('fin_kpis');
+  if (k) {
+    k.innerHTML = '';
+    LOJAS.forEach(uf => {
+      const L = stFin.lojas[uf] || { txns: [], meta: {} };
+      let ent=0, sai=0;
+      L.txns.forEach(t => { if (t.valor > 0) ent += t.valor; else sai += t.valor; });
+      if (flt && flt !== uf) return;
+      k.innerHTML += `<div style="background:#1e293b;border-radius:10px;padding:10px 14px;min-width:170px">
+        <div style="font-weight:700;color:#93c5fd">LOJA ${uf}</div>
+        <div style="font-size:12px;color:#94a3b8">${L.txns.length} lançamentos</div>
+        <div style="color:#4ade80;font-weight:600">Entradas ${fmt(ent)}</div>
+        <div style="color:#f87171;font-weight:600">Saídas ${fmt(sai)}</div>
+        <div style="color:#facc15;font-weight:600">Resultado ${fmt(ent+sai)}</div>
+        <div style="color:#e2e8f0">Saldo banco ${fmt(L.meta.bal)}</div>
+      </div>`;
+    });
+  }
+  const c = document.getElementById('fin_concilia');
+  if (c) {
+    c.innerHTML = '';
+    LOJAS.forEach(uf => {
+      const L = stFin.lojas[uf] || { meta: {} };
+      const ent = L.txns.reduce((s,t) => s + (t.valor > 0 ? t.valor : 0), 0);
+      const sai = L.txns.reduce((s,t) => s + (t.valor < 0 ? t.valor : 0), 0);
+      const res = ent + sai;
+      let html = `<div style="background:#0b1220;border:1px solid #334155;border-radius:10px;padding:10px 14px;min-width:260px">
+        <div style="font-weight:700;color:#e2e8f0">🧾 Conciliação ${uf}</div>
+        <div style="font-size:12px;color:#94a3b8">${esc(L.meta.banco||'sem extrato')}</div>`;
+      if (L.meta.bal != null) {
+        html += `<div style="font-size:12px">Saldo do extrato: <b>${fmt(L.meta.bal)}</b></div>`;
+        const manual = parseFloat(String(L.meta.manual||'0').replace(/\./g,'').replace(',','.')) || 0;
+        const calc = manual + res;
+        const dif = calc - L.meta.bal;
+        html += `<div style="font-size:12px">Saldo inicial: <b>${fmt(manual)}</b></div>
+          <div style="font-size:12px">Saldo final calculado: <b>${fmt(calc)}</b></div>`;
+        html += (Math.abs(dif) < 0.01) ? '<div style="color:#4ade80;font-weight:700">✔ CONCILIADO</div>' : `<div style="color:#f87171;font-weight:700">✘ DIVERGÊNCIA de ${fmt(dif)}</div>`;
+        html += `<div style="margin-top:6px;font-size:11px">Saldo inicial manual: <input type="text" value="${esc(L.meta.manual||'')}" onchange="fin_manual('${uf}',this.value)" style="width:90px;padding:3px;background:#0f172a;color:#e2e8f0;border:1px solid #475569;border-radius:6px"></div>`;
+      } else {
+        html += '<div style="color:#94a3b8;font-size:12px">Sem OFX carregado.</div>';
+      }
+      c.innerHTML += html + '</div>';
+    });
+  }
+  const b = document.getElementById('fin_bancos');
+  if (b) {
+    const bancos = {};
+    LOJAS.forEach(uf => {
+      const L = stFin.lojas[uf];
+      if (L && L.meta.banco) bancos[L.meta.banco] = uf;
+    });
+    b.innerHTML = '🏦 Bancos identificados: ' + (Object.keys(bancos).length ? Object.keys(bancos).map(x => esc(x)+' → '+bancos[x]).join(' · ') : 'nenhum — importe um OFX.');
+  }
+  const tb = document.getElementById('fin_tbody');
+  if (!tb) return;
+  tb.innerHTML = '';
+  let rows = 0;
+  const todas = LOJAS.concat(['OUTROS']);
+  todas.forEach(uf => {
+    const L = stFin.lojas[uf];
+    if (!L) return;
+    if (flt && flt !== uf) return;
+    L.txns.forEach(t => {
+      rows++;
+      let opts = '';
+      CATS.forEach(c => {
+        opts += `<option value="${esc(c.n)}"${t.categoria===c.n?' selected':''}>${esc(c.n)} (${c.t==='R'?'Receita':'Despesa'})</option>`;
+      });
+      tb.innerHTML += `<tr style="background:${t.valor>=0?'rgba(74,222,128,.06)':'rgba(248,113,113,.06)'}">
+        <td style="padding:5px;border:1px solid #334155">${esc(ofxDateHuman(t.dataISO)||'—')}</td>
+        <td style="padding:5px;border:1px solid #334155">${esc(t.origem||'')}</td>
+        <td style="padding:5px;border:1px solid #334155">${esc(t.loja||'')}</td>
+        <td style="padding:5px;border:1px solid #334155">${esc(t.descricao||'')}</td>
+        <td style="padding:5px;border:1px solid #334155">${t.direcao==='ENTRADA'?'<span style="color:#4ade80">Entrada</span>':'<span style="color:#f87171">Saída</span>'}</td>
+        <td style="padding:5px;border:1px solid #334155;text-align:right">${fmt(t.valor)}</td>
+        <td style="padding:5px;border:1px solid #334155"><select onchange="fin_cat(this,'${esc(t.fitid||'x')}')" style="width:170px;background:#0f172a;color:#e2e8f0;border:1px solid #475569;border-radius:6px;padding:2px">${opts}</select></td>
+      </tr>`;
+    });
+  });
+  if (!rows) tb.innerHTML = '<tr><td colspan="7" style="padding:14px;text-align:center;color:#64748b">Nenhum lançamento. Importe arquivos OFX para começar.</td></tr>';
+}
+
+function fin_cat(sel, fitid) {
+  Object.keys(stFin.lojas).forEach(uf => {
+    stFin.lojas[uf].txns.forEach(t => {
+      if ((t.fitid||'x') === fitid) t.categoria = sel.value;
+    });
+  });
+  saveFin();
+  fin_render();
+}
+function fin_manual(uf, v) {
+  if (stFin.lojas[uf]) {
+    stFin.lojas[uf].meta.manual = v;
+    saveFin();
+    fin_render();
+  }
+}
+function fin_limpar() {
+  if (confirm('Apagar todos os lançamentos importados?')) {
+    stFin = vazio();
+    saveFin();
+    fin_render();
+    fin_status('Base limpa.', 0);
+  }
+}
+function fin_export(porLoja) {
+  const sel = document.getElementById('fin_flt_loja');
+  const flt = sel ? sel.value : '';
+  let linhas = ['sep=;', 'Data;Arquivo;Loja;Descrição;Tipo;Valor;Categoria'];
+  Object.keys(stFin.lojas).forEach(uf => {
+    const L = stFin.lojas[uf];
+    if (!L) return;
+    if (porLoja === 1 && flt && flt !== uf) return;
+    L.txns.forEach(t => {
+      linhas.push([
+        ofxDateHuman(t.dataISO) || '',
+        t.origem || '',
+        uf,
+        t.descricao || '',
+        t.direcao || '',
+        String(t.valor).replace('.', ','),
+        t.categoria || ''
+      ].join(';'));
+    });
+  });
+  const blob = new Blob(["\ufeff" + linhas.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = porLoja === 1 ? 'financeiro_loja.csv' : 'financeiro_consolidado.csv';
+  a.click();
+}
+function fin_exemplo() {
+  const linhas = [
+    'OFXHEADER:100','DATA:OFXSGML','VERSION:102','ENCODING:USASCII','CHARSET:1252','',
+    '<OFX>','<SIGNONMSGSRSV1><SONRS><DTSERVER>20260825120000[-3:GMT]</DTSERVER></SONRS></SIGNONMSGSRSV1>',
+    '<BANKMSGSRSV1><STMTTRNRS><STMTRS><CURDEF>BRL</CURDEF>',
+    '<BANKACCTFROM><BANKID>041</BANKID><ACCTID>0410-9.999-9 RS LOC</ACCTID><ACCTTYPE>CHECKING</ACCTTYPE></BANKACCTFROM>',
+    '<BANKTRANLIST><DTSTART>20260701000000[-3:GMT]</DTSTART><DTEND>20260825000000[-3:GMT]</DTEND>',
+    '<STMTTRN><TRNTYPE>CREDIT</TRNTYPE><DTPOSTED>20260701100000[-3:GMT]</DTPOSTED><TRNAMT>540,00</TRNAMT><FITID>demo1</FITID><MEMO>PIX Recebido Locação</MEMO></STMTTRN>',
+    '<STMTTRN><TRNTYPE>DEBIT</TRNTYPE><DTPOSTED>20260702120000[-3:GMT]</DTPOSTED><TRNAMT>-350,50</TRNAMT><FITID>demo2</FITID><MEMO>POSTO IPIRANGA</MEMO></STMTTRN>',
+    '<STMTTRN><TRNTYPE>DEBIT</TRNTYPE><DTPOSTED>20260703150000[-3:GMT]</DTPOSTED><TRNAMT>-540,00</TRNAMT><FITID>demo3</FITID><MEMO>IPVA PARCELA 02</MEMO></STMTTRN>',
+    '<STMTTRN><TRNTYPE>DEBIT</TRNTYPE><DTPOSTED>20260704110000[-3:GMT]</DTPOSTED><TRNAMT>-12,60</TRNAMT><FITID>demo4</FITID><MEMO>PEDAGIO AUTO</MEMO></STMTTRN>',
+    '<STMTTRN><TRNTYPE>CREDIT</TRNTYPE><DTPOSTED>20260705160000[-3:GMT]</DTPOSTED><TRNAMT>195,23</TRNAMT><FITID>demo5</FITID><MEMO>REEMBOLSO MULTAS CLIENTE</MEMO></STMTTRN>',
+    '</BANKTRANLIST>','<LEDGERBAL><BALAMT>18432,18</BALAMT><DTASOF>20260825000000[-3:GMT]</DTASOF></LEDGERBAL>',
+    '</STMTRS></STMTTRNRS></BANKMSGSRSV1></OFX>'
+  ].join('\n');
+  const r = parseOfx(linhas);
+  if (!r.txns.length) { fin_status('Erro no exemplo.', 1); return; }
+  const loja = lojaDeAcct(r.acctid) || LOJAS[0];
+  if (!stFin.lojas[loja]) stFin.lojas[loja] = { txns: [], meta: {} };
+  stFin.lojas[loja].meta.bal = r.bal;
+  stFin.lojas[loja].meta.dtasof = r.dtasof;
+  stFin.lojas[loja].meta.banco = (r.bankid||'') + ' ' + (r.acctid||'');
+  if (r.dtstart || r.dtend) { stFin.lojas[loja].meta.dtstart = r.dtstart; stFin.lojas[loja].meta.dtend = r.dtend; }
+  r.txns.forEach(t => {
+    t.origem = 'exemplo.ofx';
+    t.loja = loja;
+    t.categoria = t.categoria || autoCat(t);
+    const existe = stFin.lojas[loja].txns.some(x => x.fitid && x.fitid === t.fitid);
+    if (!existe) stFin.lojas[loja].txns.push(t);
+  });
+  stFin.lojas[loja].txns.sort((a,b) => a.dataISO < b.dataISO ? -1 : 1);
+  saveFin();
+  fin_render();
+  fin_status('✔ Exemplo carregado: ' + r.txns.length + ' lançamentos.', 0);
+}
+function fin_importar() {
+  const inp = document.getElementById('fin_ofx');
+  if (!inp || !inp.files || !inp.files.length) { fin_status('Selecione um ou vários arquivos .OFX primeiro.', 1); return; }
+  const files = Array.from(inp.files);
+  let i=0, total=0, novos=0, erros=[];
+  fin_status('Importando ' + files.length + ' arquivo(s)…', 0);
+  (function prox() {
+    if (i >= files.length) {
+      saveFin();
+      fin_render();
+      fin_status('✔ ' + total + ' arquivo(s) importado(s) · ' + novos + ' lançamento(s) lidos' + (erros.length ? ' · falhas: ' + erros.join(', ') : ''), 0);
+      return;
+    }
+    const f = files[i++];
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const txt = e.target.result;
+      const r = parseOfx(txt);
+      if (!r.txns.length) {
+        erros.push(f.name);
+        fin_status('⚠ ' + f.name + ' sem lançamentos.', 1);
+        prox();
+        return;
+      }
+      total++;
+      const loja = lojaDeAcct(r.acctid) || document.getElementById('fin_loja_dft').value || 'OUTROS';
+      if (!stFin.lojas[loja]) stFin.lojas[loja] = { txns: [], meta: {} };
+      if (!stFin.lojas[loja].meta.bal && r.bal != null) {
+        stFin.lojas[loja].meta.bal = r.bal;
+        stFin.lojas[loja].meta.dtasof = r.dtasof;
+        stFin.lojas[loja].meta.banco = (r.bankid||'') + ' ' + (r.acctid||'');
+      }
+      if (r.dtstart || r.dtend) {
+        stFin.lojas[loja].meta.dtstart = r.dtstart;
+        stFin.lojas[loja].meta.dtend = r.dtend;
+      }
+      r.txns.forEach(t => {
+        t.origem = f.name;
+        t.loja = loja;
+        if (!t.categoria) t.categoria = autoCat(t);
+        const existe = stFin.lojas[loja].txns.some(x => x.fitid && x.fitid === t.fitid);
+        if (!existe) { stFin.lojas[loja].txns.push(t); novos++; }
+      });
+      stFin.lojas[loja].txns.sort((a,b) => a.dataISO < b.dataISO ? -1 : 1);
+      prox();
+    };
+    reader.readAsText(f);
+  })();
+}
+
+function parseOfx(txt) {
+  const r = { bankid:'', acctid:'', accttype:'', name:'', bal:null, dtasof:'', dtstart:'', dtend:'', avail:null, txns:[] };
+  if (!txt) return r;
+  const tx = String(txt);
+  // Extração simples por regex
+  const bankid = tx.match(/<BANKID>([^<]*)<\/BANKID>/i);
+  r.bankid = bankid ? bankid[1].trim() : '';
+  const acctid = tx.match(/<ACCTID>([^<]*)<\/ACCTID>/i);
+  r.acctid = acctid ? acctid[1].trim() : '';
+  const bal = tx.match(/<BALAMT>([^<]*)<\/BALAMT>/i);
+  r.bal = bal ? parseOfxAmount(bal[1]) : null;
+  const dtasof = tx.match(/<DTASOF>([^<]*)<\/DTASOF>/i);
+  r.dtasof = dtasof ? ofxDateISO(dtasof[1]) : '';
+  const dtstart = tx.match(/<DTSTART>([^<]*)<\/DTSTART>/i);
+  r.dtstart = dtstart ? ofxDateISO(dtstart[1]) : '';
+  const dtend = tx.match(/<DTEND>([^<]*)<\/DTEND>/i);
+  r.dtend = dtend ? ofxDateISO(dtend[1]) : '';
+  const blocks = tx.match(/<STMTTRN>([\s\S]*?)<\/STMTTRN>/g) || [];
+  blocks.forEach(block => {
+    const amt = block.match(/<TRNAMT>([^<]*)<\/TRNAMT>/i);
+    const val = amt ? parseOfxAmount(amt[1]) : 0;
+    const data = block.match(/<DTPOSTED>([^<]*)<\/DTPOSTED>/i);
+    const dataISO = data ? ofxDateISO(data[1]) : '';
+    const memo = block.match(/<MEMO>([^<]*)<\/MEMO>/i);
+    const desc = memo ? memo[1].trim() : '';
+    const fitid = block.match(/<FITID>([^<]*)<\/FITID>/i);
+    r.txns.push({
+      tipo: '',
+      dataISO: dataISO,
+      valor: val,
+      fitid: fitid ? fitid[1].trim() : '',
+      checknum: '',
+      descricao: desc,
+      memo: desc,
+      direcao: val >= 0 ? 'ENTRADA' : 'SAIDA',
+      categoria: ''
+    });
+  });
+  return r;
+}
+
+function iniciarFinanceiro() {
+  const view = document.getElementById('page-financeiro');
+  if (!view) return;
+  const flt = document.getElementById('fin_flt_loja');
+  if (flt) {
+    flt.innerHTML = '<option value="">Todas as lojas</option>' + LOJAS.map(u => '<option>'+u+'</option>').join('');
+    flt.addEventListener('change', fin_render);
+  }
+  const dft = document.getElementById('fin_loja_dft');
+  if (dft) {
+    dft.innerHTML = '<option value="">Loja p/ não identificado</option>' + LOJAS.map(u => '<option>'+u+'</option>').join('');
+  }
+  fin_render();
+}
+
+// Exportar funções para uso no HTML
+window.doLogin = doLogin;
+window.logout = logout;
+window.showPage = showPage;
+window.salvarPlaca = salvarPlaca;
+window.limparForm = limparForm;
+window.editarPlaca = editarPlaca;
+window.excluirPlaca = excluirPlaca;
+window.cicloStatus = cicloStatus;
+window.salvarCliente = salvarCliente;
+window.limparClienteForm = limparClienteForm;
+window.editarCliente = editarCliente;
+window.excluirCliente = excluirCliente;
+window.renderStatus = renderStatus;
+window.filtrarStatusRapido = filtrarStatusRapido;
+window.irParaPlaca = irParaPlaca;
+window.uploadPDF = uploadPDF;
+window.renderDocumentos = renderDocumentos;
+window.viewPDF = viewPDF;
+window.downloadPDF = downloadPDF;
+window.deletePDF = deletePDF;
+window.closePDFModal = () => { document.getElementById('pdfModal').classList.add('hidden'); };
+window.renderRelatorio = renderRelatorio;
+window.limparFiltrosRelatorio = limparFiltrosRelatorio;
+window.imprimirRelatorio = imprimirRelatorio;
+window.salvarUsuario = salvarUsuario;
+window.limparFormUsuario = limparFormUsuario;
+window.editarUsuario = editarUsuario;
+window.excluirUsuario = excluirUsuario;
+window.renderUsuarios = renderUsuarios;
+window.alterarSenha = alterarSenha;
+window.exportarJSON = exportarJSON;
+window.importarBackup = importarBackup;
+window.limparBase = limparBase;
+window.quickSearch = quickSearch;
+// Financeiro
+window.fin_importar = fin_importar;
+window.fin_status = fin_status;
+window.fin_render = fin_render;
+window.fin_cat = fin_cat;
+window.fin_manual = fin_manual;
+window.fin_limpar = fin_limpar;
+window.fin_export = fin_export;
+window.fin_exemplo = fin_exemplo;
+window.fin_render = fin_render;
+
+</script>
+</body>
+</html>
